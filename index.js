@@ -74,7 +74,7 @@ const checkTonski = async () => {
   for (rankedType of summonerRankedData.data) {
     if (rankedType.queueType == "RANKED_SOLO_5x5") {
       const date = new Date();
-      const tonskiStat = date.toLocaleTimeString() + " - " + rankedType.tier + " " + rankedType.rank + " " + rankedType.leaguePoints;
+      const tonskiStat = date.toLocaleString() + " - " + rankedType.tier + " " + rankedType.rank + " " + rankedType.leaguePoints;
       fs.appendFile('tonski.txt', tonskiStat + "\n", function (err) {
         if (err) console.log(err);
       });
