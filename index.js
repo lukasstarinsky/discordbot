@@ -92,7 +92,7 @@ const checkTonski = async () => {
 
 client.on("ready", async () => {
   console.log(`Logging in...`);
-  //await loadGames();
+  await loadGames();
   console.log(`Logged in as ${client.user.tag}!`);
 
   await checkTonski();
@@ -181,7 +181,8 @@ client.on("interactionCreate", async (interaction) => {
                   day: '2-digit',
                   year: 'numeric',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
+                  hourCycle: 'h24'
                 })}`
               });
 
