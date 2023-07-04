@@ -176,7 +176,13 @@ client.on("interactionCreate", async (interaction) => {
               .setThumbnail(champIcon + participant.championName + ".png")
               .setImage(participant.summonerName === "Tonski" && !participant.win ? loseIcon : null)
               .setFooter({
-                text: `${gameType}${new Date(lastMatchData.data.info.gameEndTimestamp).toLocaleString()}`
+                text: `${gameType}${new Date(lastMatchData.data.info.gameEndTimestamp).toLocaleString('en-US', {
+                  month: 'long',
+                  day: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}`
               });
 
             interaction.reply({ embeds: [messageEmbed] });
