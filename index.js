@@ -182,7 +182,8 @@ client.on("interactionCreate", async (interaction) => {
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
-                  hourCycle: 'h24'
+                  hourCycle: 'h24',
+                  timeZone: 'Europe/Bratislava'
                 })}`
               });
 
