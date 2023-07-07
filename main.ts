@@ -3,6 +3,7 @@ import { Constants } from "./utils/constants";
 import * as API from "./riotapi/api";
 import fs from "fs";
 
+import "./register-commands";
 import "dotenv/config";
 import "./utils/string";
 

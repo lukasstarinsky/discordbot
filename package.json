@@ -4,8 +4,8 @@
   "description": "Discord Bot",
   "scripts": {
     "compile": "tsc",
-    "run": "node --watch ./main.js",
-    "compilerun": "tsc && node --watch ./main.js"
+    "run": "node ./main.js",
+    "compilerun": "tsc && node ./main.js"
   },
   "author": "lukasstarinsky",
   "license": "ISC",
