@@ -140,7 +140,7 @@ client.on("interactionCreate", async (interaction) => {
             console.error(err);
         }
     } else if (command === "watchlist") {
-        const action = (interaction as ChatInputCommandInteraction).options.getString("action") || "add";
+        const action = (interaction as ChatInputCommandInteraction).options.getString("action") || "current";
         const summoner = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
 
         if (action === "add") {
@@ -160,12 +160,12 @@ client.on("interactionCreate", async (interaction) => {
                 fs.writeFile("./data/watchlist.txt", newData, "utf8", err => {
                     if (err) return console.error(err);
                     LoadWatchList();
+                    interaction.reply(`${summoner} was removed from watchlist.`);
                 });
             });
             fs.unlink(`./data/${summoner}.txt`, err => {
                 if (err) return console.error(err);
             });
-            interaction.reply(`${summoner} was removed from watchlist.`);
         } else {
             interaction.reply("Current watchlist: " + watchlist);
         }
@@ -178,7 +178,11 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         fs.readFile(`./data/${summoner}.txt`, "utf8", (err, data) => {
-            if (err) return console.error(err);
+            if (err) {
+                interaction.reply(`${summoner} has no logged history yet.`);
+                return;
+            }
+
             interaction.reply({ "embeds": [
                 {
                   "title": `${summoner} - History`,
