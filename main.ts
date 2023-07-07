@@ -25,7 +25,15 @@ const checkTonski = async () => {
     const summoner = await API.GetSummoner("Tonski");
     const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
 
-    const tonskiStat = new Date().toLocaleString() + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
+    const tonskiStat = new Date().toLocaleString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h24',
+        timeZone: 'Europe/Bratislava'
+    }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
 
     fs.appendFile("tonski.txt", tonskiStat + "\n", (err) => {
         if (err) console.error(err);
@@ -35,7 +43,13 @@ const checkTonski = async () => {
         const message = `<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI HAS REACHED GOLD !!!`;
         tonski?.setNickname("winton goldski");
         general.send(loseIcon);
-        return general.send({ content: message });
+        return general.send({ "embeds": [
+            {
+              "title": `Tonski - Announcement`,
+              "description": message,
+              "color": 0x00FFFF
+            }
+        ] });
     }
 };
 
@@ -121,7 +135,14 @@ client.on("interactionCreate", async (interaction) => {
     } else if (command === "tonski") {
         fs.readFile("tonski.txt", "utf8", (err, data) => {
             if (err) return console.error(err);
-            interaction.reply(data.split("\n").slice(-25).join("\n"));
+            //interaction.reply(data.split("\n").slice(-25).join("\n"));
+            interaction.reply({ "embeds": [
+                {
+                  "title": `Tonski - History`,
+                  "description": data.split("\n").slice(-25).join("\n"),
+                  "color": 0x00FFFF
+                }
+            ] })
         });
     }
 });
