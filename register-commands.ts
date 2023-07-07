@@ -1,5 +1,5 @@
-const { REST, Routes, ApplicationCommandOptionType } = require("discord.js");
-require('dotenv').config();
+import { REST, Routes, ApplicationCommandOptionType } from "discord.js";
+import "dotenv/config";
 
 const commands = [
     {
