@@ -40,10 +40,14 @@ const UpdateWatchlist = async () => {
                 if (err) console.error(err);
             });
 
+            const general = await client.channels.fetch(Constants.TC_GENERAL) as TextChannel;
+            const tonski = general.members.get("344971043720396810");
 
-            if (summonerName === "Tonski" && soloLeagueEntry.tier === "GOLD") {
-                const general = await client.channels.fetch(Constants.TC_GENERAL) as TextChannel;
-                const tonski = general.members.get("344971043720396810");
+            if (summonerName === "Tonski" && soloLeagueEntry.tier === "DIAMOND") {
+                tonski?.setNickname("winton boosted diamondski");
+                general.send(Constants.LOSE_ICON);
+                return general.send("Achtung achtung, tonski was carried to diamond");        
+            } else if (summonerName === "Tonski" && soloLeagueEntry.tier === "GOLD") {
                 tonski?.setNickname("winton goldski");
                 general.send(Constants.LOSE_ICON);
                 const embed = {
