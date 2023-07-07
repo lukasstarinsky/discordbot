@@ -2,9 +2,10 @@
   "name": "discordbot",
   "version": "1.0.0",
   "description": "Discord Bot",
-  "main": "index.js",
   "scripts": {
-    "start": "node ./index.js --watch"
+    "compile": "tsc",
+    "run": "node --watch ./main.js",
+    "compilerun": "tsc && node --watch ./main.js"
   },
   "author": "lukasstarinsky",
   "license": "ISC",
@@ -12,6 +13,7 @@
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.11.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "typescript": "^5.1.6"
   }
 }
