@@ -26,38 +26,64 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
 const discord_js_1 = require("discord.js");
+const constants_1 = require("./utils/constants");
 const API = __importStar(require("./riotapi/api"));
 const fs_1 = __importDefault(require("fs"));
+require("dotenv/config");
+require("./utils/string");
 const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.GuildMessages, discord_js_1.GatewayIntentBits.GuildMembers, discord_js_1.GatewayIntentBits.MessageContent] });
-const loseIcon = "https://images-ext-1.discordapp.net/external/9XjtWykrwHupmNH8M1nT-9oELKgpHmsW-Ho3eWV86CY/%3Fsize%3D48/https/cdn.discordapp.com/emojis/1058849393370992650.gif";
-const champIcon = "https://ddragon.leagueoflegends.com/cdn/10.23.1/img/champion/";
-String.prototype.capitalize = function () {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-};
-const checkTonski = async () => {
-    const general = await client.channels.fetch("755055216759668808");
-    const tonski = general.members.get("344971043720396810");
-    const summoner = await API.GetSummoner("Tonski");
-    const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
-    const tonskiStat = new Date().toLocaleString() + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
-    fs_1.default.appendFile("tonski.txt", tonskiStat + "\n", (err) => {
-        if (err)
-            console.error(err);
+let watchlist = [];
+const LoadWatchList = () => {
+    watchlist.length = 0;
+    fs_1.default.readFileSync("./data/watchlist.txt", "utf8").toString().trim().split("\n").forEach(name => {
+        if (name !== "" && !watchlist.includes(name)) {
+            watchlist.push(name);
+        }
     });
-    if (soloLeagueEntry.tier === "GOLD") {
-        const message = `<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI HAS REACHED GOLD !!!`;
-        tonski?.setNickname("winton goldski");
-        general.send(loseIcon);
-        return general.send({ content: message });
+};
+const UpdateWatchlist = async () => {
+    try {
+        for (let summonerName of watchlist) {
+            const summoner = await API.GetSummoner(summonerName);
+            const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
+            const stat = new Date().toLocaleString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h24',
+                timeZone: 'Europe/Bratislava'
+            }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
+            fs_1.default.appendFile(`./data/${summonerName}.txt`, stat + "\n", (err) => {
+                if (err)
+                    console.error(err);
+            });
+            if (summonerName === "Tonski" && soloLeagueEntry.tier === "GOLD") {
+                const general = await client.channels.fetch(constants_1.Constants.TC_GENERAL);
+                const tonski = general.members.get("344971043720396810");
+                tonski?.setNickname("winton goldski");
+                general.send(constants_1.Constants.LOSE_ICON);
+                const embed = {
+                    "title": `Tonski - Announcement`,
+                    "description": "<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI HAS REACHED GOLD !!!",
+                    "color": 0x00FFFF
+                };
+                return general.send({ "embeds": [embed] });
+            }
+        }
+    }
+    catch (err) {
+        console.error(err);
     }
 };
 client.on("ready", async () => {
     console.log(`Logging in...`);
-    await checkTonski();
+    LoadWatchList();
+    await UpdateWatchlist();
     setInterval(async () => {
-        await checkTonski();
+        await UpdateWatchlist();
     }, 1000 * 60 * 30);
     console.log(`Logged in as ${client.user?.tag}!`);
 });
@@ -91,8 +117,8 @@ client.on("interactionCreate", async (interaction) => {
                 .setTitle(summoner.name)
                 .setColor(summonerLastGameStats.win ? 0x00FF00 : 0xFF0000)
                 .setFields({ name: "Rank", value: `${soloLeagueEntry.tier.toLowerCase().capitalize()} ${soloLeagueEntry.rank} ${soloLeagueEntry.leaguePoints} LP`, inline: true }, { name: "W/L", value: `${soloLeagueEntry.wins}W/${soloLeagueEntry.losses}L`, inline: true }, { name: "WR", value: `${winrate.toFixed(2)}%`, inline: true }, { name: "Time Played", value: timePlayed }, { name: "Score", value: `${summonerLastGameStats.kills}/${summonerLastGameStats.deaths}/${summonerLastGameStats.assists}`, inline: true }, { name: "KDA", value: kda.toFixed(2), inline: true }, { name: "KP", value: `${kp.toFixed(2)}%`, inline: true }, { name: "Damage dealt", value: `${summonerLastGameStats.totalDamageDealtToChampions.toString()}, which is ${damagePercentage.toFixed(2)}% of team total` }, { name: "CS Advantage", value: hadCSAdvantage ? "Yes" : "No", inline: true }, { name: "CS First 10 minutes", value: `${csFirstTenMinutes}`, inline: true })
-                .setThumbnail(champIcon + summonerLastGameStats.championName + ".png")
-                .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? loseIcon : null)
+                .setThumbnail(constants_1.Constants.CHAMP_ICON + summonerLastGameStats.championName + ".png")
+                .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? constants_1.Constants.LOSE_ICON : null)
                 .setFooter({
                 text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString('en-US', {
                     month: 'long',
@@ -116,11 +142,56 @@ client.on("interactionCreate", async (interaction) => {
             console.error(err);
         }
     }
-    else if (command === "tonski") {
-        fs_1.default.readFile("tonski.txt", "utf8", (err, data) => {
+    else if (command === "watchlist") {
+        const action = interaction.options.getString("action") || "add";
+        const summoner = interaction.options.getString("summoner") || "Tonski";
+        if (action === "add") {
+            fs_1.default.appendFile("./data/watchlist.txt", summoner + "\n", (err) => {
+                if (err)
+                    return console.error(err);
+                LoadWatchList();
+            });
+            interaction.reply(`${summoner} was added to watchlist.`);
+        }
+        else if (action === "remove") {
+            fs_1.default.readFile("./data/watchlist.txt", "utf8", (err, data) => {
+                if (err)
+                    return console.error(err);
+                const newData = data.trim().split("\n").filter(name => {
+                    return name !== summoner;
+                }).join("\n");
+                fs_1.default.writeFile("./data/watchlist.txt", newData, "utf8", err => {
+                    if (err)
+                        return console.error(err);
+                    LoadWatchList();
+                });
+            });
+            fs_1.default.unlink(`./data/${summoner}.txt`, err => {
+                if (err)
+                    return console.error(err);
+            });
+            interaction.reply(`${summoner} was removed from watchlist.`);
+        }
+        else {
+            interaction.reply("Current watchlist: " + watchlist);
+        }
+    }
+    else if (command === "history") {
+        const summoner = interaction.options.getString("summoner") || "Tonski";
+        if (!watchlist.includes(summoner)) {
+            interaction.reply(`${summoner} is not in watchlist.`);
+            return;
+        }
+        fs_1.default.readFile(`./data/${summoner}.txt`, "utf8", (err, data) => {
             if (err)
                 return console.error(err);
-            interaction.reply(data.split("\n").slice(-25).join("\n"));
+            interaction.reply({ "embeds": [
+                    {
+                        "title": `${summoner} - History`,
+                        "description": data.split("\n").slice(-25).join("\n"),
+                        "color": 0x00FFFF
+                    }
+                ] });
         });
     }
 });
