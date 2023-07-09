@@ -26,6 +26,10 @@ const UpdateWatchlist = async () => {
             const summoner = await API.GetSummoner(summonerName);
             const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
 
+            if (!summoner || !soloLeagueEntry) {
+                return;
+            }
+
             const stat = new Date().toLocaleString('en-US', {
                 month: '2-digit',
                 day: '2-digit',
@@ -197,7 +201,7 @@ client.on("interactionCreate", async (interaction) => {
             ] })
         });
     } else if (command === "poke") {
-		interaction.reply("startuj rift <@344971043720396810>");
+        interaction.reply("startuj rift <@344971043720396810>");
 	}
 });
 
