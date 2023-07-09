@@ -196,7 +196,9 @@ client.on("interactionCreate", async (interaction) => {
                 }
             ] })
         });
-    }
+    } else if (command === "poke") {
+		interaction.reply("startuj rift ty k0k0t plesnivy <@344971043720396810>");
+	}
 });
 
 client.login(process.env.TOKEN);

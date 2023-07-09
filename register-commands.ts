@@ -47,6 +47,10 @@ const commands = [
                 required: true
             }
         ]
+    },
+	{
+        name: "poke",
+        description: "Notifies the discord user 'Tonski'"
     }
 ];
 
