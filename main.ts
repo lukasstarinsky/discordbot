@@ -81,7 +81,7 @@ client.on("ready", async () => {
 
     console.log("Loading games...");
     try {
-        games = await OFME.LoadGames();
+        //games = await OFME.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
@@ -123,16 +123,18 @@ client.on("interactionCreate", async (interaction) => {
             const hadCSAdvantage = challenges.maxCsAdvantageOnLaneOpponent > 0;
             const csFirstTenMinutes = challenges.laneMinionsFirst10Minutes;
             const gameType = lastGame.info.queueId == 420 ? "SoloQ - " : lastGame.info.queueId == 440 ? "FlexQ - " : ""; 
-
+            
             const seconds = summonerLastGameStats.timePlayed % 60;
             const secondsPlayed = seconds < 10 ? String(seconds).padStart(2, "0") : String(seconds);
             const timePlayed = `${Math.floor(summonerLastGameStats.timePlayed / 60)}:${secondsPlayed}`;
+            const champion = summonerLastGameStats.championName;
+            const lane = summonerLastGameStats.lane;
 
             const messageEmbed = new EmbedBuilder()
                 .setTitle(summoner.name)
                 .setColor(summonerLastGameStats.win ? 0x00FF00 : 0xFF0000)
                 .setFields(
-                    { name: "Rank", value: `${soloLeagueEntry.tier.toLowerCase().capitalize()} ${soloLeagueEntry.rank} ${soloLeagueEntry.leaguePoints} LP`, inline: true },
+                    { name: "Rank", value: `**${soloLeagueEntry.tier.toLowerCase().capitalize()} ${soloLeagueEntry.rank}** ${soloLeagueEntry.leaguePoints} LP`, inline: true },
                     { name: "W/L", value: `${soloLeagueEntry.wins}W/${soloLeagueEntry.losses}L`, inline: true },
                     { name: "WR", value: `${winrate.toFixed(2)}%`, inline: true },
                     { name: "Time Played", value: timePlayed },
@@ -141,7 +143,8 @@ client.on("interactionCreate", async (interaction) => {
                     { name: "KP", value: `${kp.toFixed(2)}%`, inline: true },
                     { name: "Damage dealt", value: `${summonerLastGameStats.totalDamageDealtToChampions.toString()}, which is ${damagePercentage.toFixed(2)}% of team total` },
                     { name: "CS Advantage", value: hadCSAdvantage ? "Yes": "No", inline: true },
-                    { name: "CS First 10 minutes", value: `${csFirstTenMinutes}`, inline: true }
+                    { name: "CS First 10 minutes", value: `${csFirstTenMinutes}`, inline: true },
+                    { name: "Role", value: `**${champion}** - ${lane}` }
                 )
                 .setThumbnail(Constants.CHAMP_ICON + summonerLastGameStats.championName + ".png")
                 .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? Constants.LOSE_ICON : null)
