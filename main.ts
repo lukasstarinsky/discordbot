@@ -1,6 +1,8 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { Constants } from "./utils/constants";
-import * as API from "./riotapi/api";
+import { Game } from "./onlinefixme/game.type";
+import * as LOL from "./riotapi/api";
+import * as OFME from "./onlinefixme/api";
 import fs from "fs";
 
 import "./register-commands";
@@ -10,6 +12,7 @@ import "./utils/string";
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
 
 let watchlist: string[] = [];
+let games: Game[] = [];
 
 const LoadWatchList = () => {
     watchlist.length = 0;
@@ -23,8 +26,8 @@ const LoadWatchList = () => {
 const UpdateWatchlist = async () => {
     try {
         for (let summonerName of watchlist) {
-            const summoner = await API.GetSummoner(summonerName);
-            const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
+            const summoner = await LOL.GetSummoner(summonerName);
+            const soloLeagueEntry = await LOL.GetSoloLeagueEntry(summoner);
 
             if (!summoner || !soloLeagueEntry) {
                 return;
@@ -68,7 +71,15 @@ const UpdateWatchlist = async () => {
 };
 
 client.on("ready", async () => {
-    console.log(`Logging in...`);
+    console.log("Logging in...");
+
+    console.log("Loading games...");
+    try {
+        games = await OFME.LoadGames();
+    } catch(err) {
+        console.log("Failed to load games.");
+    }
+    console.log("Games loaded.");
 
     LoadWatchList();
 
@@ -87,10 +98,10 @@ client.on("interactionCreate", async (interaction) => {
     if (command === "lol") {
         try {
             const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
-            const summoner = await API.GetSummoner(summonerName);
-            const soloLeagueEntry = await API.GetSoloLeagueEntry(summoner);
-            const lastGame = await API.GetLastMatch(summoner);
-            const summonerLastGameStats = API.GetSummonerStatsFromMatch(lastGame, summoner);
+            const summoner = await LOL.GetSummoner(summonerName);
+            const soloLeagueEntry = await LOL.GetSoloLeagueEntry(summoner);
+            const lastGame = await LOL.GetLastMatch(summoner);
+            const summonerLastGameStats = LOL.GetSummonerStatsFromMatch(lastGame, summoner);
 
             if (!summoner || !soloLeagueEntry || !lastGame || !summonerLastGameStats) {
                 interaction.reply("This user's data couldn't be loaded.");
@@ -202,7 +213,20 @@ client.on("interactionCreate", async (interaction) => {
         });
     } else if (command === "poke") {
         interaction.reply("startuj rift <@344971043720396810>");
-	}
+    } else if (command === "random_game") {
+        const randGame: Game = games[Math.floor(Math.random() * games.length)];
+
+        const messageEmbed = new EmbedBuilder()
+            .setTitle("Random Game")
+            .setColor(0x00fdfd)
+            .setFields(
+                { name: "Name", value: randGame.name },
+                { name: "Link", value: randGame.link },
+            )
+            .setImage(randGame.imageUrl);
+
+        interaction.reply({ embeds: [messageEmbed] });
+    }
 });
 
 client.login(process.env.TOKEN);
