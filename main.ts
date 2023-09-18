@@ -81,7 +81,7 @@ client.on("ready", async () => {
 
     console.log("Loading games...");
     try {
-        //games = await OFME.LoadGames();
+        games = await OFME.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
