@@ -15,6 +15,12 @@ let watchlist: string[] = [];
 let games: Game[] = [];
 
 const LoadWatchList = () => {
+    if (!fs.existsSync("./data/watchlist.txt")) {
+        fs.mkdirSync("./data");
+        fs.writeFileSync("./data/watchlist.txt", "", { flag: "w" }); 
+        return;
+    }
+
     watchlist.length = 0;
     fs.readFileSync("./data/watchlist.txt", "utf8").toString().trim().split("\n").forEach(name => {
         if (name !== "" && !watchlist.includes(name)) {
@@ -164,12 +170,22 @@ client.on("interactionCreate", async (interaction) => {
         const summoner = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
 
         if (action === "add") {
+            if (watchlist.includes(summoner)) {
+                interaction.reply(`${summoner} is already in watchlist.`);
+                return;
+            }
+
             fs.appendFile("./data/watchlist.txt", summoner + "\n", (err) => {
                 if (err) return console.error(err);
                 LoadWatchList();
             });
             interaction.reply(`${summoner} was added to watchlist.`);
         } else if (action === "remove") {
+            if (!watchlist.includes(summoner)) {
+                interaction.reply(`${summoner} is not in watchlist.`);
+                return;
+            }
+
             fs.readFile("./data/watchlist.txt", "utf8", (err, data) => {
                 if (err) return console.error(err);
 
