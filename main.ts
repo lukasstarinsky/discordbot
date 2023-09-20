@@ -112,6 +112,9 @@ client.on("interactionCreate", async (interaction) => {
             let loseStreak = 0;
             loopOuter: for (let matchId of matchIds) {
                 const match = await LOL.GetMatch(matchId);
+                
+                if (match.info.queueId != 420)
+                    continue;
 
                 for (let participant of match.info.participants) {
                     if (participant.summonerName === "Tonski") {
@@ -124,7 +127,7 @@ client.on("interactionCreate", async (interaction) => {
             }
 
             const messageEmbed = new EmbedBuilder()
-                .setTitle(`${summonerName} has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}`)
+                .setTitle(`${summonerName} has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`)
                 .setColor(0x00fdfd);
 
             await interaction.editReply({ embeds: [messageEmbed] });
