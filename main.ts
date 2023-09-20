@@ -81,7 +81,7 @@ client.on("ready", async () => {
 
     console.log("Loading games...");
     try {
-        //games = await OFME.LoadGames();
+        games = await OFME.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
@@ -103,21 +103,21 @@ client.on("interactionCreate", async (interaction) => {
 
     if (command === "losestreak") {
         try {
+            await interaction.deferReply();
+
             const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
             const summoner = await LOL.GetSummoner(summonerName);
             const matchIds = await LOL.GetMatchHistory(summoner);
 
-            interaction.deferReply();
             let loseStreak = 0;
-            for (let matchId of matchIds) {
+            loopOuter: for (let matchId of matchIds) {
                 const match = await LOL.GetMatch(matchId);
 
                 for (let participant of match.info.participants) {
                     if (participant.summonerName === "Tonski") {
-                        if (participant.win) {
-                            loseStreak = 0;
-                            break;
-                        }
+                        if (participant.win)
+                            break loopOuter;
+                        
                         loseStreak++;
                     }
                 }
@@ -127,17 +127,19 @@ client.on("interactionCreate", async (interaction) => {
                 .setTitle(`${summonerName} has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}`)
                 .setColor(0x00fdfd);
 
-            interaction.editReply({ embeds: [messageEmbed] });
+            await interaction.editReply({ embeds: [messageEmbed] });
         } catch (err: any) {
             if (err.response) {
-                interaction.reply(err.response.status + " - Something went wrong.");
+                await interaction.editReply(err.response.status + " - Something went wrong.");
             } else {
-                interaction.reply("Something went wrong.");
+                await interaction.editReply("Something went wrong.");
             }
             console.error(err);
         }
     } else if (command === "lol") {
         try {
+            await interaction.deferReply();
+
             const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
             const summoner = await LOL.GetSummoner(summonerName);
             const soloLeagueEntry = await LOL.GetSoloLeagueEntry(summoner);
@@ -145,7 +147,7 @@ client.on("interactionCreate", async (interaction) => {
             const summonerLastGameStats = LOL.GetSummonerStatsFromMatch(lastGame, summoner);
 
             if (!summoner || !soloLeagueEntry || !lastGame || !summonerLastGameStats) {
-                interaction.reply("This user's data couldn't be loaded.");
+                await interaction.reply("This user's data couldn't be loaded.");
                 return;
             }
 
@@ -194,12 +196,12 @@ client.on("interactionCreate", async (interaction) => {
                         timeZone: 'Europe/Bratislava'
                     })}`
                 });
-            interaction.reply({ embeds: [messageEmbed ]});
+            await interaction.editReply({ embeds: [messageEmbed ]});
         } catch (err: any) {
             if (err.response) {
-                interaction.reply(err.response.status + " - Something went wrong.");
+                await interaction.editReply(err.response.status + " - Something went wrong.");
             } else {
-                interaction.reply("Something went wrong.");
+                await interaction.editReply("Something went wrong.");
             }
             console.error(err);
         }
@@ -209,7 +211,7 @@ client.on("interactionCreate", async (interaction) => {
 
         if (action === "add") {
             if (watchlist.includes(summoner)) {
-                interaction.reply(`${summoner} is already in watchlist.`);
+                await interaction.reply(`${summoner} is already in watchlist.`);
                 return;
             }
 
@@ -217,10 +219,10 @@ client.on("interactionCreate", async (interaction) => {
                 if (err) return console.error(err);
                 LoadWatchList();
             });
-            interaction.reply(`${summoner} was added to watchlist.`);
+            await interaction.reply(`${summoner} was added to watchlist.`);
         } else if (action === "remove") {
             if (!watchlist.includes(summoner)) {
-                interaction.reply(`${summoner} is not in watchlist.`);
+                await interaction.reply(`${summoner} is not in watchlist.`);
                 return;
             }
 
@@ -241,13 +243,13 @@ client.on("interactionCreate", async (interaction) => {
                 if (err) return console.error(err);
             });
         } else {
-            interaction.reply("Current watchlist: " + watchlist);
+            await interaction.reply("Current watchlist: " + watchlist);
         }
     } else if (command === "history") {
         const summoner = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
 
         if (!watchlist.includes(summoner)) {
-            interaction.reply(`${summoner} is not in watchlist.`);
+            await interaction.reply(`${summoner} is not in watchlist.`);
             return;
         }
 
@@ -266,7 +268,7 @@ client.on("interactionCreate", async (interaction) => {
             ] })
         });
     } else if (command === "poke") {
-        interaction.reply("startuj rift <@344971043720396810>");
+        await interaction.reply("startuj rift <@344971043720396810>");
     } else if (command === "random_game") {
         const randGame: Game = games[Math.floor(Math.random() * games.length)];
 
@@ -279,7 +281,7 @@ client.on("interactionCreate", async (interaction) => {
             )
             .setImage(randGame.imageUrl);
 
-        interaction.reply({ embeds: [messageEmbed] });
+        await interaction.reply({ embeds: [messageEmbed] });
     }
 });
 
