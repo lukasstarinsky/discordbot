@@ -81,7 +81,7 @@ client.on("ready", async () => {
 
     console.log("Loading games...");
     try {
-        games = await OFME.LoadGames();
+        //games = await OFME.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
@@ -101,7 +101,42 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = interaction.commandName;
 
-    if (command === "lol") {
+    if (command === "losestreak") {
+        try {
+            const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+            const summoner = await LOL.GetSummoner(summonerName);
+            const matchIds = await LOL.GetMatchHistory(summoner);
+
+            interaction.deferReply();
+            let loseStreak = 0;
+            for (let matchId of matchIds) {
+                const match = await LOL.GetMatch(matchId);
+
+                for (let participant of match.info.participants) {
+                    if (participant.summonerName === "Tonski") {
+                        if (participant.win) {
+                            loseStreak = 0;
+                            break;
+                        }
+                        loseStreak++;
+                    }
+                }
+            }
+
+            const messageEmbed = new EmbedBuilder()
+                .setTitle(`${summonerName} has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}`)
+                .setColor(0x00fdfd);
+
+            interaction.editReply({ embeds: [messageEmbed] });
+        } catch (err: any) {
+            if (err.response) {
+                interaction.reply(err.response.status + " - Something went wrong.");
+            } else {
+                interaction.reply("Something went wrong.");
+            }
+            console.error(err);
+        }
+    } else if (command === "lol") {
         try {
             const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
             const summoner = await LOL.GetSummoner(summonerName);

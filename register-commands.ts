@@ -15,6 +15,18 @@ const commands = [
         ]
     },
     {
+        name: "losestreak",
+        description: "Show losestreak of selected summoner",
+        options: [
+            {
+                name: "summoner",
+                description: "Name of the summoner",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ]
+    },
+    {
         name: "random_game",
         description: "Show random game from online-fix.me"
     },

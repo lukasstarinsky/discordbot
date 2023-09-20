@@ -39,6 +39,24 @@ export async function GetFlexLeagueEntry(summoner: Summoner): Promise<LeagueEntr
     })[0];
 }
 
+export async function GetMatch(matchId: string): Promise<MatchDto> {
+    const matchUrl = `https://europe.api.riotgames.com/lol/match/v5/matches/${matchId}`
+    const matchData = await axios.get<MatchDto>(matchUrl, { headers: {
+      "X-Riot-Token": process.env.RIOT_API
+    }});
+
+    return matchData.data;
+}
+
+export async function GetMatchHistory(summoner: Summoner): Promise<string[]> {
+    const matchIdsUrl = `https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?count=30`;
+    const matchIds = await axios.get<string[]>(matchIdsUrl, { headers: {
+        "X-Riot-Token": process.env.RIOT_API
+    }});
+
+    return matchIds.data;
+}
+
 export async function GetLastMatch(summoner: Summoner): Promise<MatchDto> {
     const matchIdsUrl = `https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?count=1`;
     const matchIds = await axios.get<string[]>(matchIdsUrl, { headers: {
