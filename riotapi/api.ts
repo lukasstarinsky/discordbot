@@ -2,6 +2,7 @@ import axios from "axios";
 import { Summoner } from "./summoner.type";
 import { LeagueEntryDTO } from "./league.type";
 import { MatchDto, ParticipantDto } from "./match.type";
+import { CurrentGameInfoDTO } from "./spectator.type";
 
 import "dotenv/config";
 
@@ -21,6 +22,15 @@ export async function GetLeagueEntries(summoner: Summoner): Promise<LeagueEntryD
     }});
 
     return leagueEntries.data;
+}
+
+export async function GetCurrentActiveMatch(summoner: Summoner): Promise<CurrentGameInfoDTO> {
+    const activeMatchUrl = `https://eun1.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/${summoner.id}`;
+    const activeMatch = await axios.get<CurrentGameInfoDTO>(activeMatchUrl, { headers: {
+        "X-Riot-Token": process.env.RIOT_API
+    }});
+
+    return activeMatch.data;
 }
 
 export async function GetSoloLeagueEntry(summoner: Summoner): Promise<LeagueEntryDTO> {

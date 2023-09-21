@@ -189,9 +189,9 @@ client.on("interactionCreate", async (interaction) => {
                 .setThumbnail(Constants.CHAMP_ICON + summonerLastGameStats.championName + ".png")
                 .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? Constants.LOSE_ICON : null)
                 .setFooter({
-                    text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString('en-US', {
-                        month: 'long',
+                    text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString('en-Gb', {
                         day: '2-digit',
+                        month: 'long',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
@@ -207,6 +207,46 @@ client.on("interactionCreate", async (interaction) => {
                 await interaction.editReply("Something went wrong.");
             }
             console.error(err);
+        }
+    } else if (command === "ingame") {
+        try {
+            await interaction.deferReply();
+
+            const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+            const summoner = await LOL.GetSummoner(summonerName);
+            const gameInfo = await LOL.GetCurrentActiveMatch(summoner);
+
+            if (!summoner || !gameInfo) {
+                await interaction.reply("This user's data couldn't be loaded.");
+                return;
+            }
+
+            console.log(gameInfo);
+
+            //const timeElapsed = gameInfo.gameLength + 180;
+            const timeElapsed = (Date.now().valueOf() - gameInfo.gameStartTime) / 1000;
+            const minutes = String(Math.floor(timeElapsed / 60));
+            const seconds = String(Math.floor(timeElapsed % 60)).padStart(2, '0');
+
+            const messageEmbed = new EmbedBuilder()
+                .setTitle(summoner.name)
+                .setColor(0x00FF00)
+                .setFields(
+                    { name: "Time Elapsed", value: `${minutes}:${seconds}`, inline: true },
+                )
+            await interaction.editReply({ embeds: [messageEmbed ]});
+        } catch (err: any) {
+            if (err.response) {
+                if (err.response.status == 404) {
+                    await interaction.editReply("Hráč nie je v hre.");
+                } else {
+                    await interaction.editReply(err.response.status + " - Something went wrong.");
+                    console.error(err);
+                }
+            } else {
+                await interaction.editReply("Something went wrong.");
+                console.error(err);
+            }
         }
     } else if (command === "watchlist") {
         const action = (interaction as ChatInputCommandInteraction).options.getString("action") || "current";
