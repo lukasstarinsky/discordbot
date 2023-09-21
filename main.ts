@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { Constants } from "./utils/constants";
+import { DataDragon } from "data-dragon";
 import { Game } from "./onlinefixme/game.type";
 import * as LOL from "./riotapi/api";
 import * as OFME from "./onlinefixme/api";
@@ -8,8 +9,11 @@ import fs from "fs";
 import "./register-commands";
 import "dotenv/config";
 import "./utils/string";
+import "./utils/dictionary";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
+
+let dragon: DataDragon;
 
 let watchlist: string[] = [];
 let games: Game[] = [];
@@ -78,6 +82,11 @@ const UpdateWatchlist = async () => {
 
 client.on("ready", async () => {
     console.log("Logging in...");
+    
+    console.log("Fetching ddragon...");
+    dragon = await DataDragon.latest();
+    await dragon.champions.fetch();
+    await dragon.items.fetch();
 
     console.log("Loading games...");
     try {
@@ -209,10 +218,13 @@ client.on("interactionCreate", async (interaction) => {
             console.error(err);
         }
     } else if (command === "ingame") {
+        const summonerInput = (interaction as ChatInputCommandInteraction).options.getString("summoner");
+        
         try {
             await interaction.deferReply();
 
-            const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+
+            const summonerName = summonerInput || "Tonski";
             const summoner = await LOL.GetSummoner(summonerName);
             const gameInfo = await LOL.GetCurrentActiveMatch(summoner);
 
@@ -221,24 +233,64 @@ client.on("interactionCreate", async (interaction) => {
                 return;
             }
 
-            console.log(gameInfo);
+            //console.log(gameInfo);
 
             //const timeElapsed = gameInfo.gameLength + 180;
             const timeElapsed = (Date.now().valueOf() - gameInfo.gameStartTime) / 1000;
             const minutes = String(Math.floor(timeElapsed / 60));
             const seconds = String(Math.floor(timeElapsed % 60)).padStart(2, '0');
+            
+            let bans: string = "";
+            let teams: Dictionary<string> = {};
 
-            const messageEmbed = new EmbedBuilder()
+            let messageEmbed = new EmbedBuilder()
                 .setTitle(summoner.name)
                 .setColor(0x00FF00)
                 .setFields(
-                    { name: "Time Elapsed", value: `${minutes}:${seconds}`, inline: true },
+                    { name: "Time Elapsed", value: `${minutes}:${seconds}`},
                 )
+
+            for (let participant of gameInfo.participants) {
+                const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
+
+                if (teams[participant.teamId] == null) teams[participant.teamId] = "";
+
+                teams[participant.teamId] += "**" + participant.summonerName + "** - " + participantChamp?.name + "\n";
+            }
+                
+            let i = 1;
+            Object.entries(teams).forEach(
+                ([key, value]) => {
+                    messageEmbed.addFields(
+                        { name: `Team ${i}`, value: `${value}`, inline: true}
+                    )
+                    ++i;
+                }
+            );
+
+            /*for (let participant of gameInfo.participants) {
+                const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
+
+                messageEmbed.addFields(
+                    { name: `${participant.summonerName}`, value: `${participantChamp?.name}`, inline: true}
+                )
+            }*/
+
+            for (let banned of gameInfo.bannedChampions) {
+                const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId))
+
+                bans += bannedChamp?.name + "\n";
+            }
+            
+            messageEmbed.addFields(
+                { name: `Banned`, value: `${bans}`, inline: false}
+            )
+
             await interaction.editReply({ embeds: [messageEmbed ]});
         } catch (err: any) {
             if (err.response) {
                 if (err.response.status == 404) {
-                    await interaction.editReply("Hráč nie je v hre.");
+                    await interaction.editReply(summonerInput + " is not in-game.");
                 } else {
                     await interaction.editReply(err.response.status + " - Something went wrong.");
                     console.error(err);
