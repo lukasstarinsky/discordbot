@@ -27,6 +27,18 @@ const commands = [
         ]
     },
     {
+        name: "insult",
+        description: "Insults an user",
+        options: [
+            {
+                name: "user",
+                description: "User to be insulted",
+                type: ApplicationCommandOptionType.User,
+                required: true
+            }
+        ]
+    },
+    {
         name: "ingame",
         description: "Show ingame summoner info",
         options: [

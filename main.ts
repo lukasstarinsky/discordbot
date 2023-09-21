@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction, T
 import { Constants } from "./utils/constants";
 import { DataDragon } from "data-dragon";
 import { Game } from "./onlinefixme/game.type";
+import { insults } from "./utils/insult"
 import * as LOL from "./riotapi/api";
 import * as OFME from "./onlinefixme/api";
 import fs from "fs";
@@ -148,6 +149,12 @@ client.on("interactionCreate", async (interaction) => {
             }
             console.error(err);
         }
+    } else if (command === "insult") {
+        await interaction.deferReply();
+
+        const user = (interaction as ChatInputCommandInteraction).options.getUser("user");
+        
+        await interaction.editReply("<@" + user + "> " + insults[Math.floor(Math.random() * insults.length)]);
     } else if (command === "lol") {
         try {
             await interaction.deferReply();
