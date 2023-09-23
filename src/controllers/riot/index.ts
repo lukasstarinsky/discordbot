@@ -143,24 +143,27 @@ export async function HandleInGameData(interaction: CommandInteraction) {
         let teams: Dictionary<string> = {};
 
         let messageEmbed = new EmbedBuilder()
-            .setTitle(summoner.name)
+            .setTitle(`${gameInfo.gameMode} - ${summoner.name}`)
             .setColor(0x00FF00)
             .setFields(
-                { name: "Time Elapsed", value: `${minutes}:${seconds}`},
+                { name: "**Time Elapsed**", value: `${minutes}:${seconds}`},
             );
 
         for (let participant of gameInfo.participants) {
             const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
 
+            const summoner  = await Service.GetSummonerById(participant.summonerId);
+            const soloLeagueEntry  = await Service.GetSoloLeagueEntry(summoner);
+
             if (teams[participant.teamId] == null) teams[participant.teamId] = "";
 
-            teams[participant.teamId] += `**${participant.summonerName}** - ${participantChamp?.name}\n`;
+            teams[participant.teamId] += `**${participant.summonerName}** - ${participantChamp?.name} - ${soloLeagueEntry.tier} ${soloLeagueEntry.rank}\n`;
         }
             
         let i = 1;
         Object.entries(teams).forEach(([key, value]) => {
             messageEmbed.addFields(
-                { name: `Team ${i}`, value: `${value}`, inline: true}
+                { name: `**Team ${i}**`, value: `${value}`, inline: true}
             )
             ++i;
         });
@@ -173,14 +176,21 @@ export async function HandleInGameData(interaction: CommandInteraction) {
             )
         }*/
 
+        let first = true;
         for (let banned of gameInfo.bannedChampions) {
             const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId))
 
-            bans += bannedChamp?.name + "\n";
+            if (first) {
+                first = false;
+            } else {
+                bans += ", ";
+            }
+
+            bans += bannedChamp?.name;
         }
         
         messageEmbed.addFields(
-            { name: `Banned`, value: `${bans}`, inline: false}
+            { name: `**Banned**`, value: `${bans}`, inline: false}
         );
 
         await interaction.editReply({ embeds: [ messageEmbed ]});

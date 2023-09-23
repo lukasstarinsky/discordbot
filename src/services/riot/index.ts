@@ -17,6 +17,15 @@ export async function GetSummoner(summonerName: string): Promise<Summoner> {
     return summoner.data;
 }
 
+export async function GetSummonerById(summonerId: string): Promise<Summoner> {
+    const summonerUrl = `https://eun1.api.riotgames.com/lol/summoner/v4/summoners/${summonerId}`;
+    const summoner = await axios.get<Summoner>(summonerUrl, { headers: {
+        "X-Riot-Token": process.env.RIOT_API
+    }});
+
+    return summoner.data;
+}
+
 export async function GetLoseStreak(summoner: Summoner): Promise<number> {
     const matchIds = await GetMatchHistory(summoner);
 
