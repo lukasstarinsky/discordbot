@@ -217,10 +217,12 @@ export async function HandleInGameData(interaction: CommandInteraction) {
             // Summoner info
             context.textAlign = "center";
             context.textBaseline = "middle";
-            context.font = "20px Georgia";
             context.fillStyle = "#FFFFFF";
-            context.fillText(participant.summonerName, rect.centerX + index * rect.spacing, rect.centerY);
-            context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 35);
+            context.font = "bold 25px Georgia";
+            context.fillText(`${participantChamp?.name}`, rect.centerX + index * rect.spacing, rect.centerY);
+            context.font = "20px Georgia";
+            context.fillText(participant.summonerName, rect.centerX + index * rect.spacing, rect.centerY + 35);
+            context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 70);
             ++count;
         }
         
