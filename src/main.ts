@@ -1,6 +1,8 @@
-import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
+import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction } from "discord.js";
+import mongoose, { ConnectOptions } from "mongoose";
 import "dotenv/config";
 import Insults from "~/data/insults";
+import Watchlist from "~/models/watchlist";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import "~/register-commands";
@@ -10,8 +12,17 @@ const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayI
 client.on("ready", async () => {
     console.log("Logging in...");
     
-    await OnlineFix.Init();
+    //await OnlineFix.Init();
     await Riot.Init();
+
+    try {
+        await mongoose.connect(`${process.env.MONGO_DB_URL}`);
+        console.log("Database connected");
+    } catch (err: any) {
+        console.error("Failed to connect to database");
+        console.error(err);
+        process.exit(69);
+    }
 
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
