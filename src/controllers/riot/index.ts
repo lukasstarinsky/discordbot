@@ -1,4 +1,6 @@
 import { CommandInteraction, ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel, AttachmentBuilder } from "discord.js";
+import fs from "fs";
+import axios from "axios";
 import Canvas from "@napi-rs/canvas";
 import { DataDragon } from "data-dragon";
 import { LeagueEntryDTO } from "~/types/riot";
@@ -45,6 +47,18 @@ export async function Init() {
     dragon = await DataDragon.latest();
     await dragon.champions.fetch();
     await dragon.items.fetch();
+
+    if (!fs.existsSync("./assets/champions")) {
+        console.log("Downloading champion images...");
+
+        fs.mkdirSync("./assets/champions");
+        dragon.champions.forEach(async (champion) => {
+            const response = await axios(Constants.CHAMP_ICON + champion.image.full, { method: "GET", responseType: "stream"});
+            response.data.pipe(fs.createWriteStream(`./assets/champions/${champion.image.full}`));
+        });
+
+        console.log("Champion images downloaded.");
+    }
 
     liveGameBackground = await Canvas.loadImage("./assets/loading_screen.png");
 }
@@ -197,7 +211,7 @@ export async function HandleInGameData(interaction: CommandInteraction) {
             // context.strokeRect(rect.x + index * rect.spacing, rect.y, rect.w, rect.h);
 
             // Champion image
-            const champion = await Canvas.loadImage(Constants.CHAMP_ICON + participantChamp!.id + ".png");
+            const champion = await Canvas.loadImage(`./assets/champions/${participantChamp!.id}.png`);
             context.drawImage(champion, rect.centerX - 120 / 2 + index * rect.spacing, rect.y + 60, 120, 120);
             
             // Summoner info
@@ -219,7 +233,7 @@ export async function HandleInGameData(interaction: CommandInteraction) {
         count = 0;
         for (let banned of gameInfo.bannedChampions) {
             const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId));
-            const champion = await Canvas.loadImage(Constants.CHAMP_ICON + bannedChamp!.id + ".png");
+            const champion = await Canvas.loadImage(`./assets/champions/${bannedChamp!.id}.png`);
             context.drawImage(champion, 118 - 25, canvas.height / 2 + count * 60 - 270, 50, 50);
             ++count;
         }
