@@ -1,10 +1,12 @@
 import axios from "axios";
-import { Summoner } from "./summoner.type";
-import { LeagueEntryDTO } from "./league.type";
-import { MatchDto, ParticipantDto } from "./match.type";
-import { CurrentGameInfoDTO } from "./spectator.type";
-
 import "dotenv/config";
+
+import { 
+    Summoner,
+    LeagueEntryDTO,
+    MatchDto,
+    ParticipantDto,
+    CurrentGameInfoDTO } from "~/types/riot";
 
 export async function GetSummoner(summonerName: string): Promise<Summoner> {
     const summonerUrl = `https://eun1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`;

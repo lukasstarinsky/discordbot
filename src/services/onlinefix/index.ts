@@ -1,6 +1,7 @@
-import axios from "axios";
-import { Game } from "./game.type";
 import * as cheerio from "cheerio";
+import axios from "axios";
+
+import { Game } from "~/types/onlinefix/game.type";
 
 const sleep = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms));

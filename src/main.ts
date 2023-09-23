@@ -1,16 +1,18 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
-import { Constants } from "./utils/constants";
 import { DataDragon } from "data-dragon";
-import { Game } from "./onlinefixme/game.type";
-import { insults } from "./utils/insult"
-import * as LOL from "./riotapi/api";
-import * as OFME from "./onlinefixme/api";
+import "dotenv/config";
 import fs from "fs";
 
-import "./register-commands";
-import "dotenv/config";
-import "./utils/string";
-import "./utils/dictionary";
+import Constants from "~/data/constants";
+import Insults from "~/data/insults";
+import { Game } from "~/types/onlinefix/game.type";
+import * as LOL from "~/services/riot";
+import * as OFME from "~/services/onlinefix";
+import * as Riot from "~/controllers/riot";
+
+import "~/register-commands";
+import "~/utils/string";
+import "~/types/dictionary";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
 
@@ -91,7 +93,7 @@ client.on("ready", async () => {
 
     console.log("Loading games...");
     try {
-        games = await OFME.LoadGames();
+        //games = await OFME.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
@@ -112,6 +114,7 @@ client.on("interactionCreate", async (interaction) => {
     const command = interaction.commandName;
 
     if (command === "losestreak") {
+        await Riot.Handle(interaction);
         try {
             await interaction.deferReply();
 
@@ -154,7 +157,7 @@ client.on("interactionCreate", async (interaction) => {
 
         const user = (interaction as ChatInputCommandInteraction).options.getUser("user");
         
-        await interaction.editReply("<@" + user + "> " + insults[Math.floor(Math.random() * insults.length)]);
+        await interaction.editReply("<@" + user + "> " + Insults[Math.floor(Math.random() * Insults.length)]);
     } else if (command === "lol") {
         try {
             await interaction.deferReply();

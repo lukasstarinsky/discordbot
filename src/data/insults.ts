@@ -1,4 +1,4 @@
-export let insults: string[] = [
+const Insults: string[] = [
 	"A small dick's like a disability, so I won't make fun of you.",
 	"Even after covid, please carry on wearing your face mask so I do not have to look at you!",
 	"All right. All right, I'll confess… I confess you're a bigger idiot than I thought you were.",
@@ -358,5 +358,6 @@ export let insults: string[] = [
 	"Learn from your parents' mistakes - use birth control!",
 	"Looks aren't everything; in your case, they aren't anything.",
 	"You're so ugly, you had tinted windows on your incubator.",
-	"You're so ugly, you had tinted windows on your incubator.",
 ];
+
+export default Insults;

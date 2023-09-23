@@ -4,8 +4,8 @@
   "description": "Discord Bot",
   "scripts": {
     "compile": "tsc",
-    "start": "node ./main.js",
-    "compilerun": "tsc && node ./main.js"
+    "start": "link-module-alias && node ./dist/main.js",
+    "compilerun": "tsc && link-module-alias && node ./dist/main.js"
   },
   "author": "lukasstarinsky",
   "license": "ISC",
@@ -15,6 +15,10 @@
     "data-dragon": "^0.0.2",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
+    "link-module-alias": "^1.2.0",
     "typescript": "^5.1.6"
+  },
+  "_moduleAliases": {
+    "~": "dist"
   }
 }

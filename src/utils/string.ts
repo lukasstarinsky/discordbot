@@ -1,5 +1,5 @@
 interface String {
-    capitalize(): string;
+  capitalize(): string;
 }
 
 String.prototype.capitalize = function() {
