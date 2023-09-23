@@ -20,7 +20,7 @@ client.on("ready", async () => {
         process.exit(69);
     }
     
-    await OnlineFix.Init();
+    // await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {

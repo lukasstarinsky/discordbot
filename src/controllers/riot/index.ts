@@ -1,5 +1,7 @@
-import { CommandInteraction, ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel } from "discord.js";
+import { CommandInteraction, ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel, AttachmentBuilder } from "discord.js";
+import Canvas from "@napi-rs/canvas";
 import { DataDragon } from "data-dragon";
+import { LeagueEntryDTO } from "~/types/riot";
 import * as Service from "~/services/riot";
 import * as Embed from "~/utils/embed";
 import Constants from "~/data/constants";
@@ -9,6 +11,26 @@ import "~/utils/string";
 
 // Todo: Use custom parsed json
 let dragon: DataDragon;
+let liveGameBackground: Canvas.Image;
+const playerRect = {
+    x: 240, 
+    y: 6, 
+    w: 249,
+    h: 456,
+    spacing: 296,
+    centerX: 240 + (249 / 2),
+    centerY: 6 + (456 / 2)
+};
+
+const playerRect2 = {
+    x: 240, 
+    y: 529, 
+    w: 249,
+    h: 456,
+    spacing: 296,
+    centerX: 240 + (249 / 2),
+    centerY: 529 + (456 / 2)
+};
 
 export async function Init() {
     const watchlist = await Watchlist.findOne();
@@ -23,6 +45,8 @@ export async function Init() {
     dragon = await DataDragon.latest();
     await dragon.champions.fetch();
     await dragon.items.fetch();
+
+    liveGameBackground = await Canvas.loadImage("./assets/loading_screen.png");
 }
 
 export async function HandleLoseStreak(interaction: CommandInteraction) {
@@ -127,6 +151,12 @@ export async function HandleInGameData(interaction: CommandInteraction) {
     const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
     
     try {
+        const canvas = Canvas.createCanvas(1920, 989);
+        const context = canvas.getContext("2d");
+
+        // Background
+        context.drawImage(liveGameBackground, 0, 0, canvas.width, canvas.height);
+
         const summoner = await Service.GetSummoner(summonerName);
         const gameInfo = await Service.GetCurrentActiveMatch(summoner);
 
@@ -135,65 +165,67 @@ export async function HandleInGameData(interaction: CommandInteraction) {
             return;
         }
 
+        // Time elapsed
         const timeElapsed = (Date.now().valueOf() - gameInfo.gameStartTime) / 1000;
         const minutes = String(Math.floor(timeElapsed / 60));
         const seconds = String(Math.floor(timeElapsed % 60)).padStart(2, '0');
-        
-        let bans: string = "";
-        let teams: Dictionary<string> = {};
 
-        let messageEmbed = new EmbedBuilder()
-            .setTitle(`${gameInfo.gameMode} - ${summoner.name}`)
-            .setColor(0x00FF00)
-            .setFields(
-                { name: "**Time Elapsed**", value: `${minutes}:${seconds}`},
-            );
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.font = "40px Georgia";
+        context.fillStyle = "#FFFFFF";
+        context.fillText(`${minutes}:${seconds}`, canvas.width / 2, canvas.height / 2);
 
+        // Players
+        let count = 0;
         for (let participant of gameInfo.participants) {
             const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
+            const summoner = await Service.GetSummonerById(participant.summonerId);
+            let soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
 
-            const summoner  = await Service.GetSummonerById(participant.summonerId);
-            const soloLeagueEntry  = await Service.GetSoloLeagueEntry(summoner);
+            if (!soloLeagueEntry) {
+                soloLeagueEntry = {} as LeagueEntryDTO;
 
-            if (teams[participant.teamId] == null) teams[participant.teamId] = "";
-
-            teams[participant.teamId] += `**${participant.summonerName}** - ${participantChamp?.name} - ${soloLeagueEntry.tier} ${soloLeagueEntry.rank}\n`;
-        }
-            
-        let i = 1;
-        Object.entries(teams).forEach(([key, value]) => {
-            messageEmbed.addFields(
-                { name: `**Team ${i}**`, value: `${value}`, inline: true}
-            )
-            ++i;
-        });
-
-        /*for (let participant of gameInfo.participants) {
-            const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
-
-            messageEmbed.addFields(
-                { name: `${participant.summonerName}`, value: `${participantChamp?.name}`, inline: true}
-            )
-        }*/
-
-        let first = true;
-        for (let banned of gameInfo.bannedChampions) {
-            const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId))
-
-            if (first) {
-                first = false;
-            } else {
-                bans += ", ";
+                soloLeagueEntry.tier = "Unranked";
+                soloLeagueEntry.rank = "";
             }
 
-            bans += bannedChamp?.name;
+            const rect = participant.teamId == 100 ? playerRect : playerRect2;
+            const index = count % 5;
+
+            // context.strokeStyle = "#0099FF";
+            // context.strokeRect(rect.x + index * rect.spacing, rect.y, rect.w, rect.h);
+
+            // Champion image
+            const champion = await Canvas.loadImage(Constants.CHAMP_ICON + participantChamp!.id + ".png");
+            context.drawImage(champion, rect.centerX - 120 / 2 + index * rect.spacing, rect.y + 60, 120, 120);
+            
+            // Summoner info
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.font = "20px Georgia";
+            context.fillStyle = "#FFFFFF";
+            context.fillText(participant.summonerName, rect.centerX + index * rect.spacing, rect.centerY);
+            context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 35);
+            ++count;
         }
         
-        messageEmbed.addFields(
-            { name: `**Banned**`, value: `${bans}`, inline: false}
-        );
+        // Bans
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.font = "40px Georgia";
+        context.fillStyle = "#FFFFFF";
+        context.fillText("Bans", 118, canvas.height / 2 - 300);
+        count = 0;
+        for (let banned of gameInfo.bannedChampions) {
+            const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId));
+            const champion = await Canvas.loadImage(Constants.CHAMP_ICON + bannedChamp!.id + ".png");
+            context.drawImage(champion, 118 - 25, canvas.height / 2 + count * 60 - 270, 50, 50);
+            ++count;
+        }
 
-        await interaction.editReply({ embeds: [ messageEmbed ]});
+        const attachment = new AttachmentBuilder(await canvas.encode("png"), { name: "ingame_data.png" });
+        interaction.editReply({ files: [attachment] });
     } catch (err: any) {
         if (err.response) {
             if (err.response.status == 404) {
