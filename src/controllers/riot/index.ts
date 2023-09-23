@@ -1,28 +1,23 @@
 import { CommandInteraction, ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel } from "discord.js";
 import { DataDragon } from "data-dragon";
-import fs from "fs";
 import * as Service from "~/services/riot";
+import * as Embed from "~/utils/embed";
 import Constants from "~/data/constants";
+import Watchlist from "~/models/watchlist";
+import History from "~/models/history";
+import "~/utils/string";
 
-let watchlist: string[] = [];
+// Todo: Use custom parsed json
 let dragon: DataDragon;
 
-const LoadWatchList = () => {
-    if (!fs.existsSync("./data/watchlist.txt")) {
-        fs.writeFileSync("./data/watchlist.txt", "", { flag: "w" }); 
-        return;
-    }
-
-    watchlist.length = 0;
-    fs.readFileSync("./data/watchlist.txt", "utf8").toString().trim().split("\n").forEach(name => {
-        if (name !== "" && !watchlist.includes(name)) {
-            watchlist.push(name);
-        }
-    });
-}
-
 export async function Init() {
-    LoadWatchList();
+    const watchlist = await Watchlist.findOne();
+    
+    if (!watchlist) {
+        console.log("Creating new watchlist...");
+        const watchlistNew = new Watchlist();
+        await watchlistNew.save();
+    }
 
     console.log("Fetching ddragon...");
     dragon = await DataDragon.latest();
@@ -31,35 +26,20 @@ export async function Init() {
 }
 
 export async function HandleLoseStreak(interaction: CommandInteraction) {
+    await interaction.deferReply();
+    
     try {
-        await interaction.deferReply();
-
         const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
-        const summoner = await Service.GetSummoner(summonerName);
-        const matchIds = await Service.GetMatchHistory(summoner);
-
-        let loseStreak = 0;
-        loopOuter: for (let matchId of matchIds) {
-            const match = await Service.GetMatch(matchId);
-            
-            if (match.info.queueId != 420)
-                continue;
-
-            for (let participant of match.info.participants) {
-                if (participant.summonerName === "Tonski") {
-                    if (participant.win)
-                        break loopOuter;
-                    
-                    loseStreak++;
-                }
-            }
+        let summoner;
+        
+        try {
+            summoner = await Service.GetSummoner(summonerName);
+        } catch (err) {
+            await interaction.editReply(Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`));
+            return;
         }
-
-        const messageEmbed = new EmbedBuilder()
-            .setTitle(`${summonerName} has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`)
-            .setColor(0x00fdfd);
-
-        await interaction.editReply({ embeds: [messageEmbed] });
+        const loseStreak = await Service.GetLoseStreak(summoner);
+        await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`));
     } catch (err: any) {
         if (err.response) {
             await interaction.editReply(err.response.status + " - Something went wrong.");
@@ -71,9 +51,9 @@ export async function HandleLoseStreak(interaction: CommandInteraction) {
 }
 
 export async function HandleSummonerData(interaction: CommandInteraction) {
+    await interaction.deferReply();
+    
     try {
-        await interaction.deferReply();
-
         const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
         const summoner = await Service.GetSummoner(summonerName);
         const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
@@ -81,7 +61,7 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
         const summonerLastGameStats = Service.GetSummonerStatsFromMatch(lastGame, summoner);
 
         if (!summoner || !soloLeagueEntry || !lastGame || !summonerLastGameStats) {
-            await interaction.reply("This user's data couldn't be loaded.");
+            await interaction.reply(Embed.CreateErrorEmbed("This user's data couldn't be loaded."));
             return;
         }
 
@@ -133,25 +113,25 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
         await interaction.editReply({ embeds: [messageEmbed ]});
     } catch (err: any) {
         if (err.response) {
-            await interaction.editReply(err.response.status + " - Something went wrong.");
+            await interaction.editReply(Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`));
         } else {
-            await interaction.editReply("Something went wrong.");
+            await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
         }
         console.error(err);
     }
 }
 
-export async function HandleIngameData(interaction: CommandInteraction) {
+export async function HandleInGameData(interaction: CommandInteraction) {
+    await interaction.deferReply();
+
     const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
     
     try {
-        await interaction.deferReply();
-        
         const summoner = await Service.GetSummoner(summonerName);
         const gameInfo = await Service.GetCurrentActiveMatch(summoner);
 
         if (!summoner || !gameInfo) {
-            await interaction.reply("This user's data couldn't be loaded.");
+            await interaction.reply(Embed.CreateErrorEmbed("This user's data couldn't be loaded."));
             return;
         }
 
@@ -203,17 +183,17 @@ export async function HandleIngameData(interaction: CommandInteraction) {
             { name: `Banned`, value: `${bans}`, inline: false}
         );
 
-        await interaction.editReply({ embeds: [messageEmbed ]});
+        await interaction.editReply({ embeds: [ messageEmbed ]});
     } catch (err: any) {
         if (err.response) {
             if (err.response.status == 404) {
-                await interaction.editReply(summonerName + " is not in-game.");
+                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in-game.`));
             } else {
-                await interaction.editReply(err.response.status + " - Something went wrong.");
+                await interaction.editReply(Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`));
                 console.error(err);
             }
         } else {
-            await interaction.editReply("Something went wrong.");
+            await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
             console.error(err);
         }
     }
@@ -221,7 +201,9 @@ export async function HandleIngameData(interaction: CommandInteraction) {
 
 export async function UpdateWatchList(client: Client) {
     try {
-        for (let summonerName of watchlist) {
+        const watchlist = await Watchlist.findOne();
+
+        for (let summonerName of watchlist!.summoners) {
             const summoner = await Service.GetSummoner(summonerName);
             const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
 
@@ -239,9 +221,7 @@ export async function UpdateWatchList(client: Client) {
                 timeZone: 'Europe/Bratislava'
             }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
 
-            fs.appendFile(`./data/${summonerName}.txt`, stat + "\n", (err) => {
-                if (err) console.error(err);
-            });
+            await History.updateOne({ summoner: summonerName }, { $push: { history: stat } });
 
             const general = await client.channels.fetch(Constants.TC_GENERAL) as TextChannel;
             const tonski = general.members.get("344971043720396810");
@@ -275,66 +255,79 @@ export async function HandleWatchList(interaction: CommandInteraction) {
     await interaction.deferReply();
 
     const action = (interaction as ChatInputCommandInteraction).options.getString("action") || "current";
-    const summoner = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+    const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
 
-    if (action === "add") {
-        if (watchlist.includes(summoner)) {
-            await interaction.editReply(`${summoner} is already in watchlist.`);
-            return;
+    try {
+        const watchlist = await Watchlist.findOne();
+
+        if (action === "add") {
+            if (watchlist!.summoners.includes(summonerName)) {
+                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`));
+                return;
+            }
+
+            try {
+                const summoner = await Service.GetSummoner(summonerName);
+            } catch (err) {
+                await interaction.editReply(Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`));
+                return;
+            }
+
+            const history = await History.findOne({ summoner: summonerName });
+            if (!history) {
+                const historyNew = new History({
+                    summoner: summonerName,
+                    history: []
+                });
+                await historyNew.save();
+            }
+            
+            await watchlist!.updateOne({ $push: { "summoners": summonerName } });
+            await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`));
+        } else if (action === "remove") {
+            if (!watchlist!.summoners.includes(summonerName)) {
+                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`));
+                return;
+            }
+
+            await watchlist!.updateOne({ $pull: { "summoners": summonerName } });
+            await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** was removed from watchlist.`));
+        } else {
+            await interaction.editReply(Embed.CreateInfoEmbed(`Current watchlist: **${watchlist!.summoners}**`));
         }
-
-        fs.appendFile("./data/watchlist.txt", summoner + "\n", (err) => {
-            if (err) return console.error(err);
-            LoadWatchList();
-        });
-        await interaction.editReply(`${summoner} was added to watchlist.`);
-    } else if (action === "remove") {
-        if (!watchlist.includes(summoner)) {
-            await interaction.editReply(`${summoner} is not in watchlist.`);
-            return;
-        }
-
-        fs.readFile("./data/watchlist.txt", "utf8", (err, data) => {
-            if (err) return console.error(err);
-
-            const newData = data.trim().split("\n").filter(name => {
-                return name !== summoner;
-            }).join("\n");
-
-            fs.writeFile("./data/watchlist.txt", newData, "utf8", err => {
-                if (err) return console.error(err);
-                LoadWatchList();
-                interaction.editReply(`${summoner} was removed from watchlist.`);
-            });
-        });
-        fs.unlink(`./data/${summoner}.txt`, err => {
-            if (err) return console.error(err);
-        });
-    } else {
-        await interaction.editReply("Current watchlist: " + watchlist);
+    } catch (err: any) {
+        await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+        console.error(err);
     }
 }
 
 export async function HandleHistory(interaction: CommandInteraction) {
-    const summoner = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+    await interaction.deferReply();
 
-    if (!watchlist.includes(summoner)) {
-        await interaction.reply(`${summoner} is not in watchlist.`);
-        return;
-    }
+    try {
+        const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+        const watchlist = await Watchlist.findOne();
 
-    fs.readFile(`./data/${summoner}.txt`, "utf8", (err, data) => {
-        if (err) {
-            interaction.reply(`${summoner} has no logged history yet.`);
+        if (!watchlist!.summoners.includes(summonerName)) {
+            await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`));
+            return;
+        }
+        
+        // Can send up to 4096 characters in embed, 100 history lines
+
+        const history = await History.findOne({ summoner: summonerName });
+
+        if (history!.history.length === 0) {
+            await interaction.editReply(Embed.CreateErrorEmbed(`${summonerName} has no logged history yet.`));
             return;
         }
 
-        interaction.reply({ "embeds": [
-            {
-                "title": `${summoner} - History`,
-                "description": data.split("\n").slice(-25).join("\n"),
-                "color": 0x00FFFF
-            }
-        ] });
-    });
+        await interaction.editReply(Embed.CreateInfoEmbed(
+            history!.history.slice(-100).join("\n"),
+            `${summonerName} - Last 100 games`
+        ));
+    } catch (err: any) {
+        await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+        console.error(err);
+    }
 }

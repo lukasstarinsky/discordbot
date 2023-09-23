@@ -1,10 +1,9 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction } from "discord.js";
-import mongoose, { ConnectOptions } from "mongoose";
+import mongoose from "mongoose";
 import "dotenv/config";
-import Insults from "~/data/insults";
-import Watchlist from "~/models/watchlist";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
+import * as Misc from "~/controllers/misc";
 import "~/register-commands";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
@@ -12,9 +11,6 @@ const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayI
 client.on("ready", async () => {
     console.log("Logging in...");
     
-    //await OnlineFix.Init();
-    await Riot.Init();
-
     try {
         await mongoose.connect(`${process.env.MONGO_DB_URL}`);
         console.log("Database connected");
@@ -23,11 +19,13 @@ client.on("ready", async () => {
         console.error(err);
         process.exit(69);
     }
-
+    
+    // await OnlineFix.Init();
+    await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
         await Riot.UpdateWatchList(client);
-    }, 1000 * 60 * 30);
+    }, 1000 * 60 * 15);
 
     console.log(`Logged in as ${client.user?.tag}!`);
 });
@@ -36,26 +34,37 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = interaction.commandName;
 
-    if (command === "losestreak")
-        await Riot.HandleLoseStreak(interaction);
-    else if (command === "insult") {
-        await interaction.deferReply();
+    switch (command) {
+        // Riot
+        case "losestreak":
+            await Riot.HandleLoseStreak(interaction);
+            break;
+        case "lol":
+            await Riot.HandleSummonerData(interaction);
+            break;
+        case "ingame":
+            await Riot.HandleInGameData(interaction);
+            break;
+        case "watchlist":
+            await Riot.HandleWatchList(interaction);
+            break;
+        case "history":
+            await Riot.HandleHistory(interaction);
+            break;
 
-        const user = (interaction as ChatInputCommandInteraction).options.getUser("user");
-        
-        await interaction.editReply("<@" + user + "> " + Insults[Math.floor(Math.random() * Insults.length)]);
-    } else if (command === "lol")
-        await Riot.HandleSummonerData(interaction);
-    else if (command === "ingame")
-        await Riot.HandleIngameData(interaction);
-    else if (command === "watchlist")
-        await Riot.HandleWatchList(interaction);
-    else if (command === "history")
-        await Riot.HandleHistory(interaction);
-    else if (command === "poke")
-        await interaction.reply("startuj rift <@344971043720396810>");
-    else if (command === "random_game")
-        await OnlineFix.Handle(interaction);
+        // Misc
+        case "insult":
+            await Misc.Insult(interaction as ChatInputCommandInteraction);
+            break;
+        case "poke":
+            await Misc.Poke(interaction);
+            break;
+
+        // OnlineFix
+        case "randomgame":
+            await OnlineFix.Handle(interaction);
+            break;
+    }
 });
 
 client.login(process.env.TOKEN);

@@ -51,7 +51,7 @@ const commands = [
         ]
     },
     {
-        name: "random_game",
+        name: "randomgame",
         description: "Show random game from online-fix.me"
     },
     {
@@ -93,10 +93,10 @@ const commands = [
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN!);
 
 (async () => {
-  try {
-    console.log("Registering commands...");
-    await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.GUILD_ID!), { body: commands });
-  } catch (err) {
-    console.log(err);
-  }
+    try {
+        console.log("Registering commands...");
+        await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.GUILD_ID!), { body: commands });
+    } catch (err) {
+        console.log(err);
+    }
 })();

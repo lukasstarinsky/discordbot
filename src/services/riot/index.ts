@@ -17,6 +17,29 @@ export async function GetSummoner(summonerName: string): Promise<Summoner> {
     return summoner.data;
 }
 
+export async function GetLoseStreak(summoner: Summoner): Promise<number> {
+    const matchIds = await GetMatchHistory(summoner);
+
+    let loseStreak = 0;
+    loopOuter: for (let matchId of matchIds) {
+        const match = await GetMatch(matchId);
+        
+        if (match.info.queueId != 420)
+            continue;
+
+        for (let participant of match.info.participants) {
+            if (participant.summonerName === summoner.name) {
+                if (participant.win)
+                    break loopOuter;
+                
+                loseStreak++;
+            }
+        }
+    }
+
+    return loseStreak;
+}
+
 export async function GetLeagueEntries(summoner: Summoner): Promise<LeagueEntryDTO[]> {
     const leagueEntriesUrl = `https://eun1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`;
     const leagueEntries = await axios.get<LeagueEntryDTO[]>(leagueEntriesUrl, { headers: {
