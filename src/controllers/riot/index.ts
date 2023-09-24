@@ -138,7 +138,7 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
             .setThumbnail(Constants.CHAMP_ICON + summonerLastGameStats.championName + ".png")
             .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? Constants.LOSE_ICON : null)
             .setFooter({
-                text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString('en-Gb', {
+                text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString("sk-SK", {
                     day: '2-digit',
                     month: 'long',
                     year: 'numeric',
@@ -269,7 +269,7 @@ export async function UpdateWatchList(client: Client) {
                 return;
             }
 
-            const stat = new Date().toLocaleString('en-US', {
+            const stat = new Date().toLocaleString("sk-SK", {
                 month: '2-digit',
                 day: '2-digit',
                 year: 'numeric',
@@ -382,7 +382,7 @@ export async function HandleHistory(interaction: CommandInteraction) {
 
         await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(
             history!.history.slice(-100).join("\n"),
-            `${summonerName} - Last 100 games`
+            `${summonerName} - History`
         )] });
     } catch (err: any) {
         await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
