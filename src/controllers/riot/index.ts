@@ -73,16 +73,16 @@ export async function HandleLoseStreak(interaction: CommandInteraction) {
         try {
             summoner = await Service.GetSummoner(summonerName);
         } catch (err) {
-            await interaction.editReply(Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`)] });
             return;
         }
         const loseStreak = await Service.GetLoseStreak(summoner);
-        await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`));
+        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`)] });
     } catch (err: any) {
         if (err.response) {
-            await interaction.editReply(err.response.status + " - Something went wrong.");
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`${err.response.status} - Something went wrong.`)] });
         } else {
-            await interaction.editReply("Something went wrong.");
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
         }
         console.error(err);
     }
@@ -99,7 +99,7 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
         const summonerLastGameStats = Service.GetSummonerStatsFromMatch(lastGame, summoner);
 
         if (!summoner || !soloLeagueEntry || !lastGame || !summonerLastGameStats) {
-            await interaction.reply(Embed.CreateErrorEmbed("This user's data couldn't be loaded."));
+            await interaction.reply({ embeds: [Embed.CreateErrorEmbed("This user's data couldn't be loaded.")] });
             return;
         }
 
@@ -151,9 +151,9 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
         await interaction.editReply({ embeds: [messageEmbed ]});
     } catch (err: any) {
         if (err.response) {
-            await interaction.editReply(Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`)] });
         } else {
-            await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
         }
         console.error(err);
     }
@@ -175,7 +175,7 @@ export async function HandleInGameData(interaction: CommandInteraction) {
         const gameInfo = await Service.GetCurrentActiveMatch(summoner);
 
         if (!summoner || !gameInfo) {
-            await interaction.reply(Embed.CreateErrorEmbed("This user's data couldn't be loaded."));
+            await interaction.reply({ embeds: [Embed.CreateErrorEmbed("This user's data couldn't be loaded.")] });
             return;
         }
 
@@ -245,13 +245,13 @@ export async function HandleInGameData(interaction: CommandInteraction) {
     } catch (err: any) {
         if (err.response) {
             if (err.response.status == 404) {
-                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in-game.`));
+                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in-game.`)] });
             } else {
-                await interaction.editReply(Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`));
+                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${err.response.status}** - Something went wrong.`)] });
                 console.error(err);
             }
         } else {
-            await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
             console.error(err);
         }
     }
@@ -320,14 +320,14 @@ export async function HandleWatchList(interaction: CommandInteraction) {
 
         if (action === "add") {
             if (watchlist!.summoners.includes(summonerName)) {
-                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`));
+                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`)] });
                 return;
             }
 
             try {
                 const summoner = await Service.GetSummoner(summonerName);
             } catch (err) {
-                await interaction.editReply(Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`));
+                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`)] });
                 return;
             }
 
@@ -341,20 +341,20 @@ export async function HandleWatchList(interaction: CommandInteraction) {
             }
             
             await watchlist!.updateOne({ $push: { "summoners": summonerName } });
-            await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`));
+            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`)] });
         } else if (action === "remove") {
             if (!watchlist!.summoners.includes(summonerName)) {
-                await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`));
+                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
                 return;
             }
 
             await watchlist!.updateOne({ $pull: { "summoners": summonerName } });
-            await interaction.editReply(Embed.CreateInfoEmbed(`**${summonerName}** was removed from watchlist.`));
+            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was removed from watchlist.`)] });
         } else {
-            await interaction.editReply(Embed.CreateInfoEmbed(`Current watchlist: **${watchlist!.summoners}**`));
+            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Current watchlist: **${watchlist!.summoners}**`)] });
         }
     } catch (err: any) {
-        await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
         console.error(err);
     }
 }
@@ -367,7 +367,7 @@ export async function HandleHistory(interaction: CommandInteraction) {
         const watchlist = await Watchlist.findOne();
 
         if (!watchlist!.summoners.includes(summonerName)) {
-            await interaction.editReply(Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
             return;
         }
         
@@ -376,16 +376,16 @@ export async function HandleHistory(interaction: CommandInteraction) {
         const history = await History.findOne({ summoner: summonerName });
 
         if (history!.history.length === 0) {
-            await interaction.editReply(Embed.CreateErrorEmbed(`${summonerName} has no logged history yet.`));
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`${summonerName} has no logged history yet.`)] });
             return;
         }
 
-        await interaction.editReply(Embed.CreateInfoEmbed(
+        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(
             history!.history.slice(-100).join("\n"),
             `${summonerName} - Last 100 games`
-        ));
+        )] });
     } catch (err: any) {
-        await interaction.editReply(Embed.CreateErrorEmbed("Something went wrong."));
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
         console.error(err);
     }
 }

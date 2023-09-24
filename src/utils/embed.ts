@@ -1,13 +1,9 @@
 const CreateEmbed = (title: string, color: number, message: string) => {
     return {
-        "embeds": [
-            {
-                "title": title,
-                "description": message,
-                "color": color
-            }
-        ]
-    };
+        "title": title,
+        "description": message,
+        "color": color
+    }
 }
 
 export function CreateErrorEmbed(message: string, title: string = "Error") {
