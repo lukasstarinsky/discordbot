@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } from "discord.js";
 import * as Embed from "~/utils/embed";
 import MineGame from "~/types/minigames/minegame.type";
+import User from "~/models/user";
 
 const NewGame = (): MineGame => {
     let game: MineGame = { buttons: Array(25).fill(new ButtonBuilder()), revealed: [], mines: [], isOver: false, isWin: false };
@@ -14,7 +15,7 @@ const NewGame = (): MineGame => {
         }
     }
 
-    while (game.mines.length != 3) {
+    while (game.mines.length != 4) {
         const mine = Math.floor(Math.random() * 26);
         game.mines.push(mine);
     }
@@ -42,7 +43,18 @@ const DisableAllButtons = (game: MineGame) => {
 }
 
 export async function Handle(interaction: ChatInputCommandInteraction) {
-    const title = `Mines 5x5 (started by ${interaction.user.username})`;
+    const user = await User.findOne({ id: interaction.user.id });
+    if (!user)
+        return;
+
+    const bet = interaction.options.getNumber("bet")!;
+
+    if (user.money! < bet) {
+        interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (your balance: ${user.money}$)`)] });
+        return;
+    }
+
+    const title = `Mines 5x5 for ${bet}$, possible win: ${bet * 14}$ (started by ${interaction.user.username})`;
 
     const game = NewGame();
     const rows = CreateActionRow(game);
@@ -79,8 +91,15 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
 
         if (game.isOver) {
             DisableAllButtons(game);
-            await x.update({ embeds: [Embed.CreateInfoEmbed(`Game over, you ${game.isWin ? "win" : "lose"}!`, title)], components: [...rows as any] });
             collector.stop();
+
+            if (game.isWin) {
+                await x.update({ embeds: [Embed.CreateInfoEmbed(`Game over, you win ${bet * 14}$`, title)], components: [...rows as any] });
+                await User.updateOne({ id: interaction.user.id }, { $inc: { money: bet * 14 } });
+            } else {
+                await x.update({ embeds: [Embed.CreateInfoEmbed(`Game over, you lost ${bet}$`, title)], components: [...rows as any] });
+                await User.updateOne({ id: interaction.user.id }, { $inc: { money: -bet } });
+            }
         } else {
             await x.update({ embeds: [Embed.CreateInfoEmbed("", title)], components: [...rows as any] });
             collector.resetTimer();

@@ -14,6 +14,12 @@ const commands = [
                 choices: [
                     { name: "mines", value: "game_mines" },
                 ]
+            },
+            {
+                name: "bet",
+                description: "Enter your bet amount",
+                type: ApplicationCommandOptionType.Number,
+                required: true
             }
         ]
     },

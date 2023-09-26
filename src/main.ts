@@ -5,6 +5,7 @@ import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Minigame from "~/controllers/minigames";
+import User from "~/models/user";
 import "~/register-commands";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
@@ -21,7 +22,28 @@ client.on("ready", async () => {
         process.exit(69);
     }
     
-    await OnlineFix.Init();
+    try {
+        client.guilds.cache.forEach(async (guild) => {
+            const members = await guild.members.fetch();
+            
+            members.forEach(async (member) => {
+                if (member.user.bot) return;
+
+                const userId = member.user.id;
+                const user = await User.findOne({ id: userId });
+
+                if (!user) {
+                    const newUserData = new User({ id: userId });
+                    await newUserData.save();
+                }
+            });
+        });
+    } catch (err: any) {
+        console.error("Failed to create user data");
+        console.error(err);
+    }
+
+    // await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
