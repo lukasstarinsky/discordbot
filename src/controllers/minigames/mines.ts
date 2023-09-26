@@ -3,7 +3,7 @@ import * as Embed from "~/utils/embed";
 import MineGame from "~/types/minigames/minegame.type";
 
 const NewGame = (): MineGame => {
-    let game: MineGame = { buttons: Array(25).fill(new ButtonBuilder()), mines: [], isOver: false, isWin: false };
+    let game: MineGame = { buttons: Array(25).fill(new ButtonBuilder()), revealed: [], mines: [], isOver: false, isWin: false };
 
     for (let i = 0; i < 5; ++i) {
         for (let j = 0; j < 5; ++j) {
@@ -69,6 +69,12 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
             button.setLabel("⁪");
             button.setDisabled(true);
             button.setStyle(ButtonStyle.Success);
+            game.revealed.push(index);
+
+            if (game.revealed.length == game.buttons.length - game.mines.length) {
+                game.isOver = true;
+                game.isWin = true;
+            }
         }
 
         if (game.isOver) {
