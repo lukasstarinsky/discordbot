@@ -1,4 +1,4 @@
-import { CommandInteraction, ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel, AttachmentBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel, AttachmentBuilder } from "discord.js";
 import fs from "fs";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
@@ -63,11 +63,11 @@ export async function Init() {
     liveGameBackground = await Canvas.loadImage("./assets/loading_screen.png");
 }
 
-export async function HandleLoseStreak(interaction: CommandInteraction) {
+export async function HandleLoseStreak(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
     
     try {
-        const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+        const summonerName = interaction.options.getString("summoner")!;
         let summoner;
         
         try {
@@ -88,11 +88,11 @@ export async function HandleLoseStreak(interaction: CommandInteraction) {
     }
 }
 
-export async function HandleSummonerData(interaction: CommandInteraction) {
+export async function HandleSummonerData(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
     
     try {
-        const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+        const summonerName = interaction.options.getString("summoner")!;
         const summoner = await Service.GetSummoner(summonerName);
         const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
         const lastGame = await Service.GetLastMatch(summoner);
@@ -159,10 +159,10 @@ export async function HandleSummonerData(interaction: CommandInteraction) {
     }
 }
 
-export async function HandleInGameData(interaction: CommandInteraction) {
+export async function HandleInGameData(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
 
-    const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+    const summonerName = interaction.options.getString("summoner")!;
     
     try {
         const canvas = Canvas.createCanvas(1920, 989);
@@ -309,16 +309,16 @@ export async function UpdateWatchList(client: Client) {
     }
 };
 
-export async function HandleWatchList(interaction: CommandInteraction) {
+export async function HandleWatchList(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
 
-    const action = (interaction as ChatInputCommandInteraction).options.getString("action") || "current";
-    const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+    const action = interaction.options.getString("action");
+    const summonerName = interaction.options.getString("summoner") || "Tonski";
 
     try {
         const watchlist = await Watchlist.findOne();
 
-        if (action === "add") {
+        if (action === "watchlist_add") {
             if (watchlist!.summoners.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`)] });
                 return;
@@ -342,7 +342,7 @@ export async function HandleWatchList(interaction: CommandInteraction) {
             
             await watchlist!.updateOne({ $push: { "summoners": summonerName } });
             await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`)] });
-        } else if (action === "remove") {
+        } else if (action === "watchlist_remove") {
             if (!watchlist!.summoners.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
                 return;
@@ -359,11 +359,11 @@ export async function HandleWatchList(interaction: CommandInteraction) {
     }
 }
 
-export async function HandleHistory(interaction: CommandInteraction) {
+export async function HandleHistory(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
 
     try {
-        const summonerName = (interaction as ChatInputCommandInteraction).options.getString("summoner") || "Tonski";
+        const summonerName = interaction.options.getString("summoner")!;
         const watchlist = await Watchlist.findOne();
 
         if (!watchlist!.summoners.includes(summonerName)) {

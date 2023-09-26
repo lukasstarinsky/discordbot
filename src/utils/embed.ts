@@ -1,4 +1,4 @@
-const CreateEmbed = (title: string, color: number, message: string) => {
+export function CreateEmbed (title: string, color: number, message: string) {
     return {
         "title": title,
         "description": message,

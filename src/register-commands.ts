@@ -3,6 +3,21 @@ import "dotenv/config";
 
 const commands = [
     {
+        name: "minigame",
+        description: "Start a minigame",
+        options: [
+            { 
+                name: "game",
+                description: "Select a game to start",
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices: [
+                    { name: "mines", value: "game_mines" },
+                ]
+            }
+        ]
+    },
+    {
         name: "lol",
         description: "Show data of selected summoner",
         options: [
@@ -60,9 +75,14 @@ const commands = [
         options: [
             {
                 name: "action",
-                description: "Options: [ add / remove / current ]",
+                description: "Action to perform on watchlist",
                 type: ApplicationCommandOptionType.String,
-                required: false,
+                required: true,
+                choices: [
+                    { name: "add", value: "watchlist_add" },
+                    { name: "remove", value: "watchlist_remove" },
+                    { name: "current", value: "watchlist_current" },
+                ]
             },
             {
                 name: "summoner",

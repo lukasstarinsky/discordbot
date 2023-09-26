@@ -1,9 +1,10 @@
-import { Client, GatewayIntentBits, EmbedBuilder, ChatInputCommandInteraction } from "discord.js";
+import { Client, GatewayIntentBits, ChatInputCommandInteraction } from "discord.js";
 import mongoose from "mongoose";
 import "dotenv/config";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
+import * as Minigame from "~/controllers/minigames";
 import "~/register-commands";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
@@ -37,19 +38,19 @@ client.on("interactionCreate", async (interaction) => {
     switch (command) {
         // Riot
         case "losestreak":
-            await Riot.HandleLoseStreak(interaction);
+            await Riot.HandleLoseStreak(interaction as ChatInputCommandInteraction);
             break;
         case "lol":
-            await Riot.HandleSummonerData(interaction);
+            await Riot.HandleSummonerData(interaction as ChatInputCommandInteraction);
             break;
         case "ingame":
-            await Riot.HandleInGameData(interaction);
+            await Riot.HandleInGameData(interaction as ChatInputCommandInteraction);
             break;
         case "watchlist":
-            await Riot.HandleWatchList(interaction);
+            await Riot.HandleWatchList(interaction as ChatInputCommandInteraction);
             break;
         case "history":
-            await Riot.HandleHistory(interaction);
+            await Riot.HandleHistory(interaction as ChatInputCommandInteraction);
             break;
 
         // Misc
@@ -63,6 +64,11 @@ client.on("interactionCreate", async (interaction) => {
         // OnlineFix
         case "randomgame":
             await OnlineFix.Handle(interaction);
+            break;
+
+        // MiniGames
+        case "minigame":
+            await Minigame.Handle(interaction as ChatInputCommandInteraction);           
             break;
     }
 });
