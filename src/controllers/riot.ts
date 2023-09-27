@@ -314,7 +314,7 @@ export async function HandleWatchList(interaction: ChatInputCommandInteraction) 
         const data = await BotData.findOne({ guildId: interaction.guildId });
         const watchlist = data!.watchlist;
 
-        if (action === "watchlist_add") {
+        if (action === "add") {
             if (watchlist.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`)] });
                 return;
@@ -338,7 +338,7 @@ export async function HandleWatchList(interaction: ChatInputCommandInteraction) 
             
             await data!.updateOne({ $push: { "watchlist": summonerName } });
             await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`)] });
-        } else if (action === "watchlist_remove") {
+        } else if (action === "remove") {
             if (!watchlist.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
                 return;

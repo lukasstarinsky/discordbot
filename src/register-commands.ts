@@ -12,7 +12,11 @@ const commands = [
                 type: ApplicationCommandOptionType.String,
                 required: true,
                 choices: [
-                    { name: "mines", value: "game_mines" },
+                    { 
+                        name: "mines", 
+                        value: "mines",
+                        description: "Minesweeper Minigame"
+                    },
                 ]
             },
             {
@@ -23,25 +27,49 @@ const commands = [
             }
         ]
     },
-    // {
-    //     name: "movies",
-    //     oprtions: [
-    //         {
-    //             name: "action",
-    //             type: ApplicationCommandOptionType.String,
-    //             required: true,
-    //             choices: [
-    //                 {
-    //                     name: "add",
-    //                     description: "Add comma separated movies",
-    //                 },
-    //                 {
-
-    //                 }
-    //             ]
-    //         }
-    //     ]
-    // },
+    {
+        name: "movies",
+        description: "Manage movie database",
+        options: [
+            {
+                name: "action",
+                description: "Select an action to perform",
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices: [
+                    {
+                        name: "add",
+                        value: "add",
+                    },
+                    {
+                        name: "list",
+                        value: "all"
+                    },
+                    {
+                        name: "list-watched",
+                        value: "watched",
+                    },
+                    {
+                        name: "list-not-watched",
+                        value: "notwatched",
+                    },
+                    {
+                        name: "mark-watched",
+                        value: "markwatched",
+                    },
+                    {
+                        name: "random",
+                        value: "random",
+                    }
+                ]
+            },
+            {
+                name: "data",
+                type: ApplicationCommandOptionType.String,
+                description: "Movie names (comma separated)"
+            }
+        ]
+    },
     {
         name: "balance",
         description: "Show your balance"
@@ -108,9 +136,9 @@ const commands = [
                 type: ApplicationCommandOptionType.String,
                 required: true,
                 choices: [
-                    { name: "add", value: "watchlist_add" },
-                    { name: "remove", value: "watchlist_remove" },
-                    { name: "current", value: "watchlist_current" },
+                    { name: "add", value: "add" },
+                    { name: "remove", value: "remove" },
+                    { name: "current", value: "current" },
                 ]
             },
             {

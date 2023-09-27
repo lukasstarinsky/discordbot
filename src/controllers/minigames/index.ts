@@ -9,7 +9,7 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
         const game = interaction.options.getString("game");
 
         switch (game) {
-            case "game_mines":
+            case "mines":
                 await Mines.Handle(interaction);
                 break;
         }

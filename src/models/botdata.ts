@@ -10,8 +10,14 @@ const botDataScheme = new Schema({
         required: true
     }],
     movies: [{
-        type: String,
-        required: true
+        name: {
+            type: String,
+            required: true
+        },
+        watched: {
+            type: Boolean,
+            default: false
+        }
     }]
 });
 

@@ -5,7 +5,7 @@ import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Minigame from "~/controllers/minigames";
-import * as Embed from "~/utils/embed";
+import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
 import "~/register-commands";
@@ -35,8 +35,6 @@ client.once("ready", async () => {
 });
 
 client.on("ready", async () => {
-    console.log("testing");
-    
     try {
         client.guilds.cache.forEach(async (guild) => {
             const members = await guild.members.fetch();
@@ -53,9 +51,9 @@ client.on("ready", async () => {
                 }
             });
 
-            const data = await BotData.findOne();
+            const data = await BotData.findOne({ guildId: guild.id });
             if (!data) {
-                const newData = new BotData({ guildId: guild.id, watchlist: [] });
+                const newData = new BotData({ guildId: guild.id });
                 await newData.save();
             }
         });
@@ -94,6 +92,9 @@ client.on("interactionCreate", async (interaction) => {
         case "poke":
             await Misc.Poke(interaction);
             break;
+        case "balance":
+            await Misc.Balance(interaction);
+            break;
 
         // OnlineFix
         case "randomgame":
@@ -104,10 +105,10 @@ client.on("interactionCreate", async (interaction) => {
         case "minigame":
             await Minigame.Handle(interaction as ChatInputCommandInteraction);           
             break;
-        case "balance":
-            await interaction.deferReply();
-            const user = await User.findOne({ id: interaction.user.id });
-            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Your balance is **${user!.money}$**`)] });
+
+        // Movies
+        case "movies":
+            await Movies.Handle(interaction as ChatInputCommandInteraction);
             break;
     }
 });
