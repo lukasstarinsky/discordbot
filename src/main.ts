@@ -5,6 +5,7 @@ import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Minigame from "~/controllers/minigames";
+import * as Embed from "~/utils/embed";
 import User from "~/models/user";
 import "~/register-commands";
 
@@ -43,7 +44,7 @@ client.on("ready", async () => {
         console.error(err);
     }
 
-    await OnlineFix.Init();
+    // await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
@@ -91,6 +92,11 @@ client.on("interactionCreate", async (interaction) => {
         // MiniGames
         case "minigame":
             await Minigame.Handle(interaction as ChatInputCommandInteraction);           
+            break;
+        case "balance":
+            await interaction.deferReply();
+            const user = await User.findOne({ id: interaction.user.id });
+            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Your balance is **${user!.money}$**`)] });
             break;
     }
 });

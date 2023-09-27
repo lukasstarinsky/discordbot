@@ -24,6 +24,10 @@ const commands = [
         ]
     },
     {
+        name: "balance",
+        description: "Show your balance"
+    },
+    {
         name: "lol",
         description: "Show data of selected summoner",
         options: [
