@@ -7,7 +7,7 @@ import { LeagueEntryDTO } from "~/types/riot";
 import * as Service from "~/services/riot";
 import * as Embed from "~/utils/embed";
 import Constants from "~/data/constants";
-import Watchlist from "~/models/watchlist";
+import BotData from "~/models/botdata";
 import History from "~/models/history";
 import "~/utils/string";
 
@@ -35,14 +35,6 @@ const playerRect2 = {
 };
 
 export async function Init() {
-    const watchlist = await Watchlist.findOne();
-    
-    if (!watchlist) {
-        console.log("Creating new watchlist...");
-        const watchlistNew = new Watchlist();
-        await watchlistNew.save();
-    }
-
     console.log("Fetching ddragon...");
     dragon = await DataDragon.latest();
     await dragon.champions.fetch();
@@ -259,51 +251,54 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
 
 export async function UpdateWatchList(client: Client) {
     try {
-        const watchlist = await Watchlist.findOne();
-
-        for (let summonerName of watchlist!.summoners) {
-            const summoner = await Service.GetSummoner(summonerName);
-            const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
-
-            if (!summoner || !soloLeagueEntry) {
-                return;
-            }
-
-            const stat = new Date().toLocaleString("sk-SK", {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hourCycle: 'h24',
-                timeZone: 'Europe/Bratislava'
-            }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
-
-            await History.updateOne({ summoner: summonerName }, { $push: { history: stat } });
-
-            const general = await client.channels.fetch(Constants.TC_GENERAL) as TextChannel;
-            const tonski = general.members.get("344971043720396810");
-
-            if (summonerName === "Tonski" && soloLeagueEntry.tier === "DIAMOND") {
-                tonski?.setNickname("winton boosted diamondski");
-                general.send(Constants.LOSE_ICON);
-                const embed = {
-                    "title": `Tonski - Announcement`,
-                    "description": "<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI WAS CARRIED TO DIAMOND !!!",
-                    "color": 0x00FFFF
+        const guilds = await BotData.find();
+        
+        guilds.forEach(async (guild) => {
+            for (let summonerName of guild.watchlist!) {
+                const summoner = await Service.GetSummoner(summonerName);
+                const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
+    
+                if (!summoner || !soloLeagueEntry) {
+                    return;
                 }
-                return general.send({ "embeds": [embed] });       
-            } else if (summonerName === "Tonski" && soloLeagueEntry.tier === "GOLD") {
-                tonski?.setNickname("winton goldski");
-                general.send(Constants.LOSE_ICON);
-                const embed = {
-                    "title": `Tonski - Announcement`,
-                    "description": "<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI HAS REACHED GOLD !!!",
-                    "color": 0x00FFFF
+    
+                const stat = new Date().toLocaleString("sk-SK", {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hourCycle: 'h24',
+                    timeZone: 'Europe/Bratislava'
+                }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
+    
+                await History.updateOne({ summoner: summonerName }, { $push: { history: stat } });
+    
+                const general = await client.channels.fetch(Constants.TC_GENERAL) as TextChannel;
+                const tonski = general.members.get("344971043720396810");
+    
+                if (summonerName === "Tonski" && soloLeagueEntry.tier === "DIAMOND") {
+                    tonski?.setNickname("winton boosted diamondski");
+                    general.send(Constants.LOSE_ICON);
+                    const embed = {
+                        "title": `Tonski - Announcement`,
+                        "description": "<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI WAS CARRIED TO DIAMOND !!!",
+                        "color": 0x00FFFF
+                    }
+                    return general.send({ "embeds": [embed] });       
+                } else if (summonerName === "Tonski" && soloLeagueEntry.tier === "GOLD") {
+                    tonski?.setNickname("winton goldski");
+                    general.send(Constants.LOSE_ICON);
+                    const embed = {
+                        "title": `Tonski - Announcement`,
+                        "description": "<@908823905878290452> <@208217888560119809> <@390580146299600896> <@482094133255733259> \n!!! TONSKI HAS REACHED GOLD !!!",
+                        "color": 0x00FFFF
+                    }
+                    return general.send({ "embeds": [embed] });
                 }
-                return general.send({ "embeds": [embed] });
             }
-        }
+        })
+
     } catch (err: any) {
         console.error(err);
     }
@@ -316,10 +311,11 @@ export async function HandleWatchList(interaction: ChatInputCommandInteraction) 
     const summonerName = interaction.options.getString("summoner") || "Tonski";
 
     try {
-        const watchlist = await Watchlist.findOne();
+        const data = await BotData.findOne({ guildId: interaction.guildId });
+        const watchlist = data!.watchlist;
 
         if (action === "watchlist_add") {
-            if (watchlist!.summoners.includes(summonerName)) {
+            if (watchlist.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`)] });
                 return;
             }
@@ -340,18 +336,18 @@ export async function HandleWatchList(interaction: ChatInputCommandInteraction) 
                 await historyNew.save();
             }
             
-            await watchlist!.updateOne({ $push: { "summoners": summonerName } });
+            await data!.updateOne({ $push: { "watchlist": summonerName } });
             await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`)] });
         } else if (action === "watchlist_remove") {
-            if (!watchlist!.summoners.includes(summonerName)) {
+            if (!watchlist.includes(summonerName)) {
                 await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
                 return;
             }
 
-            await watchlist!.updateOne({ $pull: { "summoners": summonerName } });
+            await data!.updateOne({ $pull: { "watchlist": summonerName } });
             await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was removed from watchlist.`)] });
         } else {
-            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Current watchlist: **${watchlist!.summoners}**`)] });
+            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Current watchlist: **${watchlist}**`)] });
         }
     } catch (err: any) {
         await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
@@ -364,9 +360,10 @@ export async function HandleHistory(interaction: ChatInputCommandInteraction) {
 
     try {
         const summonerName = interaction.options.getString("summoner")!;
-        const watchlist = await Watchlist.findOne();
+        const data = await BotData.findOne({ guildId: interaction.guildId });
+        const watchlist = data!.watchlist;
 
-        if (!watchlist!.summoners.includes(summonerName)) {
+        if (!watchlist.includes(summonerName)) {
             await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
             return;
         }

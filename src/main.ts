@@ -7,11 +7,12 @@ import * as Misc from "~/controllers/misc";
 import * as Minigame from "~/controllers/minigames";
 import * as Embed from "~/utils/embed";
 import User from "~/models/user";
+import BotData from "~/models/botdata";
 import "~/register-commands";
 
 const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
 
-client.on("ready", async () => {
+client.once("ready", async () => {
     console.log("Logging in...");
     
     try {
@@ -22,6 +23,19 @@ client.on("ready", async () => {
         console.error(err);
         process.exit(69);
     }
+    
+    // await OnlineFix.Init();
+    await Riot.Init();
+    await Riot.UpdateWatchList(client);
+    setInterval(async () => {
+        await Riot.UpdateWatchList(client);
+    }, 1000 * 60 * 15);
+
+    console.log(`Logged in as ${client.user?.tag}!`);
+});
+
+client.on("ready", async () => {
+    console.log("testing");
     
     try {
         client.guilds.cache.forEach(async (guild) => {
@@ -38,20 +52,17 @@ client.on("ready", async () => {
                     await newUserData.save();
                 }
             });
+
+            const data = await BotData.findOne();
+            if (!data) {
+                const newData = new BotData({ guildId: guild.id, watchlist: [] });
+                await newData.save();
+            }
         });
     } catch (err: any) {
-        console.error("Failed to create user data");
+        console.error("Failed to create initial data");
         console.error(err);
     }
-
-    // await OnlineFix.Init();
-    await Riot.Init();
-    await Riot.UpdateWatchList(client);
-    setInterval(async () => {
-        await Riot.UpdateWatchList(client);
-    }, 1000 * 60 * 15);
-
-    console.log(`Logged in as ${client.user?.tag}!`);
 });
 
 client.on("interactionCreate", async (interaction) => {

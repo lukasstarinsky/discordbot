@@ -23,6 +23,25 @@ const commands = [
             }
         ]
     },
+    // {
+    //     name: "movies",
+    //     oprtions: [
+    //         {
+    //             name: "action",
+    //             type: ApplicationCommandOptionType.String,
+    //             required: true,
+    //             choices: [
+    //                 {
+    //                     name: "add",
+    //                     description: "Add comma separated movies",
+    //                 },
+    //                 {
+
+    //                 }
+    //             ]
+    //         }
+    //     ]
+    // },
     {
         name: "balance",
         description: "Show your balance"
