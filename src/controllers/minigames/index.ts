@@ -14,6 +14,7 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
                 break;
         }
     } catch(err: any) {
-        interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
+        console.error(err);
     }
 }

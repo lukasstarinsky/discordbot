@@ -43,7 +43,7 @@ client.on("ready", async () => {
         console.error(err);
     }
 
-    // await OnlineFix.Init();
+    await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
