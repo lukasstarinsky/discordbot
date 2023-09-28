@@ -11,8 +11,8 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
         const botData = await BotData.findOne({ guildId: interaction.guildId });
         const movies = botData!.movies;
         const movieNames = movies.map((x) => x.name);
-        const moviesWatched = movies.filter(movie => movie.watched).map(movie => movie.name).join('\n');
-        const moviesNotWatched = movies.filter(movie => !movie.watched).map(movie => movie.name).join('\n');
+        const moviesWatched = movies.filter(movie => movie.watched).map(movie => movie.name);
+        const moviesNotWatched = movies.filter(movie => !movie.watched).map(movie => movie.name);
 
         switch (action) {
             case "add":
@@ -33,17 +33,19 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
 
                 break;
             case "all":
-                let message = moviesWatched.length > 0 ? `**~~${moviesWatched}~~**\n`: ``;
-                message += (moviesNotWatched.length > 0 ? `**${moviesNotWatched}**`: ``);
+                let message = "----- ***Watched*** -----\n";
+                message += moviesWatched.length > 0 ? `~~${moviesWatched.join('\n')}~~\n`: ``;
+                message += "\n--- ***Not Watched*** ---\n";
+                message += (moviesNotWatched.length > 0 ? `**${moviesNotWatched.join('\n')}**`: ``);
                 await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(message)] });
 
                 break;
             case "watched":
-                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesWatched.length > 0 ? `**~~${moviesWatched}~~**`: ``)] });
+                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesWatched.length > 0 ? `~~${moviesWatched.join('\n')}~~`: ``)] });
 
                 break;
             case "notwatched":
-                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesNotWatched.length > 0 ? `**${moviesNotWatched}**`: ``)] });
+                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesNotWatched.length > 0 ? `**${moviesNotWatched.join('\n')}**`: ``)] });
 
                 break;
             case "markwatched":
@@ -64,6 +66,9 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
 
                 break;
             case "random":
+                const outMovie = moviesNotWatched[Math.floor(Math.random() * moviesNotWatched.length)];
+                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Randomly selected movie: **${outMovie}**`)] });
+
                 break;
         }
     } catch(err: any) {
