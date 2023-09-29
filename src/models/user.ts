@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema({
     id: {
-        type: Number,
+        type: String,
         required: true
     }, 
     money: {

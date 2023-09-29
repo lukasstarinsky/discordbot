@@ -24,7 +24,7 @@ client.once("ready", async () => {
         process.exit(69);
     }
     
-    // await OnlineFix.Init();
+    await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
     setInterval(async () => {
@@ -94,6 +94,9 @@ client.on("interactionCreate", async (interaction) => {
             break;
         case "balance":
             await Misc.Balance(interaction);
+            break;
+        case "top10":
+            await Misc.Top10(interaction);
             break;
 
         // OnlineFix

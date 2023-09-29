@@ -75,6 +75,10 @@ const commands = [
         description: "Show your balance"
     },
     {
+        name: "top10",
+        description: "Shows the TOP 10 users"
+    },
+    {
         name: "lol",
         description: "Show data of selected summoner",
         options: [
