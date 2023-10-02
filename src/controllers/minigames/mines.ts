@@ -17,7 +17,9 @@ const NewGame = (): MineGame => {
 
     while (game.mines.length != 5) {
         const mine = Math.floor(Math.random() * 26);
-        game.mines.push(mine);
+
+        if (!game.mines.includes(mine))
+            game.mines.push(mine);
     }
 
     return game;
@@ -37,8 +39,13 @@ const CreateActionRow = (game: MineGame): ActionRowBuilder[] => {
 }
 
 const DisableAllButtons = (game: MineGame) => {
-    game.buttons.forEach(button => {
+    game.buttons.forEach((button, i) => {
         button.setDisabled(true);
+
+        if (game.mines.includes(i)) {
+            button.setStyle(ButtonStyle.Danger);
+            button.setEmoji("💣");
+        }
     });
 }
 
@@ -50,7 +57,7 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
     const bet = interaction.options.getNumber("bet")!;
 
     if (user.money! < bet || bet < 0) {
-        interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money}$**)`)] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money}$**)`)] });
         return;
     }
 
