@@ -69,9 +69,9 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
         .setTitle(title)
         .setColor(0x000)
         .setFields(
-            { name: "Bet", value: `**${bet}$**`, inline: true },
-            { name: "Possible win", value: `**${bet * (game.buttons.length - game.mines.length) * 1.2}$**`, inline: true },
-            { name: "Current cashout", value: `**${win}$**` },
+            { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
+            { name: "Possible win", value: `**${(bet * (game.buttons.length - game.mines.length) * 1.2).toLocaleString("sk-SK")}$**`, inline: true },
+            { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
             { name: "Player", value: `${interaction.user}`, inline: true }
         )
         .setFooter({ text: "Do not interact for 15 seconds to cashout." });
@@ -101,9 +101,9 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
             button.setStyle(ButtonStyle.Success);
             win = bet * game.revealed.length * 1.2;
             message.setFields(
-                { name: "Bet", value: `**${bet}$**`, inline: true },
-                { name: "Possible win", value: `**${bet * (game.buttons.length - game.mines.length) * 1.2}$**`, inline: true },
-                { name: "Current cashout", value: `**${win}$**` },
+                { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
+                { name: "Possible win", value: `**${(bet * (game.buttons.length - game.mines.length) * 1.2).toLocaleString("sk-SK")}$**`, inline: true },
+                { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
                 { name: "Player", value: `${interaction.user}`, inline: true }
             );
 
@@ -118,10 +118,10 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
             collector.stop();
 
             if (game.isWin) {
-                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you win **${win}$**`)], components: [...rows as any] });
+                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you win **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
                 await User.updateOne({ id: interaction.user.id }, { $inc: { money: win } });
             } else {
-                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you lost **${bet}$**`)], components: [...rows as any] });
+                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you lost **${bet.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
                 await User.updateOne({ id: interaction.user.id }, { $inc: { money: -bet } });
             }
         } else {
@@ -133,7 +133,7 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
     collector.on('end', async x => {
         if (!game.isOver) {
             DisableAllButtons(game);
-            await response.edit({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, cashout **${win}$**`)], components: [...rows as any] });
+            await response.edit({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, cashout **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
             await User.updateOne({ id: interaction.user.id }, { $inc: { money: win } });
         }
     });
