@@ -16,7 +16,7 @@ const NewGame = (): MineGame => {
     }
 
     while (game.mines.length != 5) {
-        const mine = Math.floor(Math.random() * 26);
+        const mine = Math.floor(Math.random() * game.buttons.length);
 
         if (!game.mines.includes(mine))
             game.mines.push(mine);
@@ -49,6 +49,15 @@ const DisableAllButtons = (game: MineGame) => {
     });
 }
 
+const CalculateWin = (fields: number, mines: number, revealed: number, bet: number): number => {
+    let percentage = 1.0;
+    for (let i = 0; i < revealed; ++i) {
+        percentage *= 1 - (mines / (fields - i));
+    }
+
+    return bet * (1 / percentage);
+}
+
 export async function Handle(interaction: ChatInputCommandInteraction) {
     const user = await User.findOne({ id: interaction.user.id });
     if (!user)
@@ -64,13 +73,13 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
     const game = NewGame();
     const title = `Mines 5x5 - ${game.mines.length} mines`;
     const rows = CreateActionRow(game);
-    let win = game.revealed.length > 0 ? bet * game.revealed.length * 1.2 : bet;
+    let win = bet;
     const message = new EmbedBuilder()
         .setTitle(title)
         .setColor(0x000)
         .setFields(
             { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
-            { name: "Possible win", value: `**${(bet * (game.buttons.length - game.mines.length) * 1.2).toLocaleString("sk-SK")}$**`, inline: true },
+            { name: "Possible win", value: `**${CalculateWin(game.buttons.length, game.mines.length, 20, bet).toLocaleString("sk-SK")}$**`, inline: true },
             { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
             { name: "Player", value: `${interaction.user}`, inline: true }
         )
@@ -96,13 +105,14 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
             game.isOver = true;
             game.isWin = false;
         } else {
-            button.setLabel("⁪");
+            button.setLabel("💎");
             button.setDisabled(true);
-            button.setStyle(ButtonStyle.Success);
-            win = bet * game.revealed.length * 1.2;
+            button.setStyle(ButtonStyle.Primary);
+
+            win = CalculateWin(game.buttons.length, game.mines.length, game.revealed.length, bet);
             message.setFields(
                 { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
-                { name: "Possible win", value: `**${(bet * (game.buttons.length - game.mines.length) * 1.2).toLocaleString("sk-SK")}$**`, inline: true },
+                { name: "Possible win", value: `**${CalculateWin(game.buttons.length, game.mines.length, 20, bet).toLocaleString("sk-SK")}$**`, inline: true },
                 { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
                 { name: "Player", value: `${interaction.user}`, inline: true }
             );
