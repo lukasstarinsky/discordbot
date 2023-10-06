@@ -15,7 +15,6 @@ export async function Init() {
 }
 
 export async function Handle(interaction: CommandInteraction) {
-    await interaction.deferReply();
     const randGame: Game = games[Math.floor(Math.random() * games.length)];
 
     const messageEmbed = new EmbedBuilder()

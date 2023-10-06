@@ -2,10 +2,10 @@ import { Client, GatewayIntentBits, ChatInputCommandInteraction } from "discord.
 import mongoose from "mongoose";
 import "dotenv/config";
 import { Mines, Poker } from "~/controllers/minigames";
+import * as Embed from "~/utils/embed";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
-import * as Minigame from "~/controllers/minigames";
 import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
@@ -68,52 +68,62 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
     const command = interaction.commandName;
 
-    switch (command) {
-        // Riot
-        case "losestreak":
-            await Riot.HandleLoseStreak(interaction as ChatInputCommandInteraction);
-            break;
-        case "lol":
-            await Riot.HandleSummonerData(interaction as ChatInputCommandInteraction);
-            break;
-        case "ingame":
-            await Riot.HandleInGameData(interaction as ChatInputCommandInteraction);
-            break;
-        case "watchlist":
-            await Riot.HandleWatchList(interaction as ChatInputCommandInteraction);
-            break;
-        case "history":
-            await Riot.HandleHistory(interaction as ChatInputCommandInteraction);
-            break;
+    await interaction.deferReply();
+    try {
+        switch (command) {
+            // Riot
+            case "losestreak":
+                await Riot.HandleLoseStreak(interaction as ChatInputCommandInteraction);
+                break;
+            case "lol":
+                await Riot.HandleSummonerData(interaction as ChatInputCommandInteraction);
+                break;
+            case "ingame":
+                await Riot.HandleInGameData(interaction as ChatInputCommandInteraction);
+                break;
+            case "watchlist":
+                await Riot.HandleWatchList(interaction as ChatInputCommandInteraction);
+                break;
+            case "history":
+                await Riot.HandleHistory(interaction as ChatInputCommandInteraction);
+                break;
 
-        // Misc
-        case "insult":
-            await Misc.Insult(interaction as ChatInputCommandInteraction);
-            break;
-        case "poke":
-            await Misc.Poke(interaction);
-            break;
-        case "balance":
-            await Misc.Balance(interaction);
-            break;
-        case "top10":
-            await Misc.Top10(interaction);
-            break;
+            // Misc
+            case "insult":
+                await Misc.Insult(interaction as ChatInputCommandInteraction);
+                break;
+            case "poke":
+                await Misc.Poke(interaction);
+                break;
+            case "balance":
+                await Misc.Balance(interaction);
+                break;
+            case "top10":
+                await Misc.Top10(interaction);
+                break;
 
-        // OnlineFix
-        case "randomgame":
-            await OnlineFix.Handle(interaction);
-            break;
+            // OnlineFix
+            case "randomgame":
+                await OnlineFix.Handle(interaction);
+                break;
 
-        // MiniGames
-        case "mines":
-            await Mines.Handle(interaction as ChatInputCommandInteraction);
-            break;
+            // MiniGames
+            case "mines":
+                await Mines.Handle(interaction as ChatInputCommandInteraction);
+                break;
 
-        // Movies
-        case "movies":
-            await Movies.Handle(interaction as ChatInputCommandInteraction);
-            break;
+            // Movies
+            case "movies":
+                await Movies.Handle(interaction as ChatInputCommandInteraction);
+                break;
+        }
+    } catch (err: any) {
+        if (err.response) {
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Something went wrong, error code: ${err.response.status}.`)] });
+        } else {
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
+        }
+        console.error(err);
     }
 });
 
