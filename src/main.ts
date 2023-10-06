@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, ChatInputCommandInteraction } from "discord.js";
 import mongoose from "mongoose";
 import "dotenv/config";
+import { Mines, Poker } from "~/controllers/minigames";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
@@ -105,8 +106,8 @@ client.on("interactionCreate", async (interaction) => {
             break;
 
         // MiniGames
-        case "minigame":
-            await Minigame.Handle(interaction as ChatInputCommandInteraction);           
+        case "mines":
+            await Mines.Handle(interaction as ChatInputCommandInteraction);
             break;
 
         // Movies

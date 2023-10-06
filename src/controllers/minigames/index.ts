@@ -1,20 +1,4 @@
-import { ChatInputCommandInteraction } from "discord.js";
 import * as Mines from "./mines";
-import * as Embed from "~/utils/embed";
+import * as Poker from "./poker";
 
-export async function Handle(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply();
-
-    try {
-        const game = interaction.options.getString("game");
-
-        switch (game) {
-            case "mines":
-                await Mines.Handle(interaction);
-                break;
-        }
-    } catch(err: any) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
-        console.error(err);
-    }
-}
+export { Mines, Poker };

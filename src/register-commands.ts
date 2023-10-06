@@ -3,22 +3,9 @@ import "dotenv/config";
 
 const commands = [
     {
-        name: "minigame",
-        description: "Start a minigame",
+        name: "mines",
+        description: "Start mines minigame",
         options: [
-            { 
-                name: "game",
-                description: "Select a game to start",
-                type: ApplicationCommandOptionType.String,
-                required: true,
-                choices: [
-                    { 
-                        name: "mines", 
-                        value: "mines",
-                        description: "Minesweeper Minigame"
-                    },
-                ]
-            },
             {
                 name: "bet",
                 description: "Enter your bet amount",

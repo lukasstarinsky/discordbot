@@ -59,92 +59,99 @@ const CalculateWin = (fields: number, mines: number, revealed: number, bet: numb
 }
 
 export async function Handle(interaction: ChatInputCommandInteraction) {
-    const user = await User.findOne({ id: interaction.user.id });
-    if (!user)
-        return;
+    await interaction.deferReply();
+    
+    try {
+        const user = await User.findOne({ id: interaction.user.id });
+        if (!user)
+            return;
 
-    const bet = Math.floor(interaction.options.getNumber("bet")!);
+        const bet = Math.floor(interaction.options.getNumber("bet")!);
 
-    if (user.money! < bet || bet < 0) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money}$**)`)] });
-        return;
-    }
-    await user.updateOne({ $inc: { money: -bet } });
-
-    const game = CreateNewGame(5);
-    const title = `Mines 5x5 - ${game.mines.length} mines`;
-    const rows = CreateActionRows(game);
-    let win = bet;
-    const message = new EmbedBuilder()
-        .setTitle(title)
-        .setColor(0x000)
-        .setFields(
-            { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
-            { name: "Possible win", value: `**${CalculateWin(game.buttons.length, game.mines.length, game.buttons.length - game.mines.length, bet).toLocaleString("sk-SK")}$**`, inline: true },
-            { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
-            { name: "Player", value: `${interaction.user}`, inline: true }
-        )
-        .setFooter({ text: "Do not interact for 15 seconds to cashout." });
-
-    const response = await interaction.editReply({ embeds: [message], components: [...rows as any] });
-    const collector = response.createMessageComponentCollector({ time: 15_000 });
-
-    collector.on("collect", async x => {
-        if (x.user.id !== interaction.user.id) {
-            await x.reply({ embeds: [Embed.CreateErrorEmbed("This session is not yours!")], ephemeral: true });
+        if (user.money! < bet || bet < 0) {
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money}$**)`)] });
             return;
         }
+        await user.updateOne({ $inc: { money: -bet } });
 
-        const index = parseInt(x.customId.slice(4));
-        const button = game.buttons.at(index)!;
-        game.revealed.push(index);
-
-        if (game.mines.includes(index)) {
-            button.setEmoji("💣");
-            button.setDisabled(true);
-            button.setStyle(ButtonStyle.Danger);
-            game.isOver = true;
-            game.isWin = false;
-        } else {
-            button.setLabel("💎");
-            button.setDisabled(true);
-            button.setStyle(ButtonStyle.Primary);
-
-            win = CalculateWin(game.buttons.length, game.mines.length, game.revealed.length, bet);
-            message.setFields(
+        const game = CreateNewGame(5);
+        const title = `Mines 5x5 - ${game.mines.length} mines`;
+        const rows = CreateActionRows(game);
+        let win = bet;
+        const message = new EmbedBuilder()
+            .setTitle(title)
+            .setColor(0x000)
+            .setFields(
                 { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
                 { name: "Possible win", value: `**${CalculateWin(game.buttons.length, game.mines.length, game.buttons.length - game.mines.length, bet).toLocaleString("sk-SK")}$**`, inline: true },
                 { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
                 { name: "Player", value: `${interaction.user}`, inline: true }
-            );
+            )
+            .setFooter({ text: "Do not interact for 15 seconds to cashout." });
 
-            if (game.revealed.length == game.buttons.length - game.mines.length) {
+        const response = await interaction.editReply({ embeds: [message], components: [...rows as any] });
+        const collector = response.createMessageComponentCollector({ time: 15_000 });
+
+        collector.on("collect", async x => {
+            if (x.user.id !== interaction.user.id) {
+                await x.reply({ embeds: [Embed.CreateErrorEmbed("This session is not yours!")], ephemeral: true });
+                return;
+            }
+
+            const index = parseInt(x.customId.slice(4));
+            const button = game.buttons.at(index)!;
+            game.revealed.push(index);
+
+            if (game.mines.includes(index)) {
+                button.setEmoji("💣");
+                button.setDisabled(true);
+                button.setStyle(ButtonStyle.Danger);
                 game.isOver = true;
-                game.isWin = true;
-            }
-        }
-
-        if (game.isOver) {
-            DisableAllButtons(game);
-            collector.stop();
-
-            if (game.isWin) {
-                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you win **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
-                await user.updateOne({ $inc: { money: win } });
+                game.isWin = false;
             } else {
-                await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you lost **${bet.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
-            }
-        } else {
-            await x.update({ embeds: [message], components: [...rows as any] });
-            collector.resetTimer();
-        }
-    });
+                button.setLabel("💎");
+                button.setDisabled(true);
+                button.setStyle(ButtonStyle.Primary);
 
-    collector.on('end', async x => {
-        if (!game.isOver) {
-            DisableAllButtons(game);
-            await response.edit({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, cashout **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
-            await user.updateOne({ $inc: { money: win } });
-        }
-    });
+                win = CalculateWin(game.buttons.length, game.mines.length, game.revealed.length, bet);
+                message.setFields(
+                    { name: "Bet", value: `**${bet.toLocaleString("sk-SK")}$**`, inline: true },
+                    { name: "Possible win", value: `**${CalculateWin(game.buttons.length, game.mines.length, game.buttons.length - game.mines.length, bet).toLocaleString("sk-SK")}$**`, inline: true },
+                    { name: "Current cashout", value: `**${win.toLocaleString("sk-SK")}$**` },
+                    { name: "Player", value: `${interaction.user}`, inline: true }
+                );
+
+                if (game.revealed.length == game.buttons.length - game.mines.length) {
+                    game.isOver = true;
+                    game.isWin = true;
+                }
+            }
+
+            if (game.isOver) {
+                DisableAllButtons(game);
+                collector.stop();
+
+                if (game.isWin) {
+                    await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you win **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
+                    await user.updateOne({ $inc: { money: win } });
+                } else {
+                    await x.update({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, you lost **${bet.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
+                }
+            } else {
+                await x.update({ embeds: [message], components: [...rows as any] });
+                collector.resetTimer();
+            }
+        });
+
+        collector.on('end', async x => {
+            if (!game.isOver) {
+                DisableAllButtons(game);
+                await response.edit({ embeds: [Embed.CreateEmbed(title, 0x000, `Game over, cashout **${win.toLocaleString("sk-SK")}$**`)], components: [...rows as any] });
+                await user.updateOne({ $inc: { money: win } });
+            }
+        });
+    } catch(err: any) {
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
+        console.error(err);
+    }
 }
