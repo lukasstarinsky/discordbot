@@ -66,7 +66,7 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
     const bet = Math.floor(interaction.options.getNumber("bet")!);
 
     if (user.money! < bet || bet < 0) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money}$**)`)] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Insufficient balance (Your balance: **${user.money!.toLocaleString("sk-SK")}$**)`)] });
         return;
     }
     await user.updateOne({ $inc: { money: -bet } });
