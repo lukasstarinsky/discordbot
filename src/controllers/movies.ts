@@ -2,14 +2,30 @@ import { ChatInputCommandInteraction } from "discord.js";
 import * as Embed from "~/utils/embed";
 import BotData from "~/models/botdata";
 
+async function SendMovieListMessage(interaction: ChatInputCommandInteraction) {
+    const botData = await BotData.findOne({ guildId: interaction.guildId });
+    const movies = botData!.movies;
+    const moviesWatched = movies.filter(movie => movie.watched).map(movie => movie.name);
+    const moviesNotWatched = movies.filter(movie => !movie.watched).map(movie => movie.name);
+
+    await interaction.deleteReply();
+    const messages = await interaction.channel!.messages.fetch({ limit: 5 });
+    messages.forEach(async message => {
+        await message.delete();
+    });
+    let message = "----- ***Watched*** -----\n";
+    message += moviesWatched.length > 0 ? `~~${moviesWatched.join('\n')}~~\n`: ``;
+    message += "\n--- ***Not Watched*** ---\n";
+    message += (moviesNotWatched.length > 0 ? `**${moviesNotWatched.join('\n')}**`: ``);
+    await interaction.channel!.send({ embeds: [Embed.CreateInfoEmbed(message)] });
+}
+
 export async function Handle(interaction: ChatInputCommandInteraction) {
     const action = interaction.options.getString("action");
     const data = interaction.options.getString("data");
     const botData = await BotData.findOne({ guildId: interaction.guildId });
     const movies = botData!.movies;
     const movieNames = movies.map((x) => x.name);
-    const moviesWatched = movies.filter(movie => movie.watched).map(movie => movie.name);
-    const moviesNotWatched = movies.filter(movie => !movie.watched).map(movie => movie.name);
 
     switch (action) {
         case "add":
@@ -20,30 +36,15 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
                     return;
                 }
 
-                await BotData.updateOne({ guildId: interaction.guildId }, { $push: { movies: { name: movie } } });
+                BotData.updateOne({ guildId: interaction.guildId }, { $push: { movies: { name: movie } } })
+                    .then(async () => {
+                        await SendMovieListMessage(interaction);
+                    });
             });
-
-            if (notAdded.length != 0)
-                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`These movies are already in list: **${notAdded}**`)] });
-            else
-                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed("Movies added successfully")] });
 
             break;
         case "all":
-            let message = "----- ***Watched*** -----\n";
-            message += moviesWatched.length > 0 ? `~~${moviesWatched.join('\n')}~~\n`: ``;
-            message += "\n--- ***Not Watched*** ---\n";
-            message += (moviesNotWatched.length > 0 ? `**${moviesNotWatched.join('\n')}**`: ``);
-            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(message)] });
-
-            break;
-        case "watched":
-            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesWatched.length > 0 ? `~~${moviesWatched.join('\n')}~~`: ``)] });
-
-            break;
-        case "notwatched":
-            await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(moviesNotWatched.length > 0 ? `**${moviesNotWatched.join('\n')}**`: ``)] });
-
+            await SendMovieListMessage(interaction);
             break;
         case "markwatched":
             let notMarked: string[] = [];
@@ -53,19 +54,16 @@ export async function Handle(interaction: ChatInputCommandInteraction) {
                     return;
                 }
 
-                await BotData.updateOne({ guildId: interaction.guildId, "movies.name": movie }, { $set: { "movies.$.watched": true } });
+                BotData.updateOne({ guildId: interaction.guildId, "movies.name": movie }, { $set: { "movies.$.watched": true } })
+                    .then(async () => {
+                        await SendMovieListMessage(interaction);
+                    })
             });
-
-            if (notMarked.length != 0)
-                await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`These movies were not marked: **${notMarked}**`)] });
-            else
-                await interaction.editReply({ embeds: [Embed.CreateInfoEmbed("Movies marked successfully")] });
-
             break;
         case "random":
+            const moviesNotWatched = movies.filter(movie => !movie.watched).map(movie => movie.name);
             const outMovie = moviesNotWatched[Math.floor(Math.random() * moviesNotWatched.length)];
             await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Randomly selected movie: **${outMovie}**`)] });
-
             break;
     }
 }

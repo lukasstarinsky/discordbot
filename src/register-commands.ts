@@ -33,14 +33,6 @@ const commands = [
                         value: "all"
                     },
                     {
-                        name: "list-watched",
-                        value: "watched",
-                    },
-                    {
-                        name: "list-not-watched",
-                        value: "notwatched",
-                    },
-                    {
                         name: "mark-watched",
                         value: "markwatched",
                     },
