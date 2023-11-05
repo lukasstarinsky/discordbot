@@ -4,6 +4,7 @@
   "description": "Discord Bot",
   "scripts": {
     "compile": "tsc",
+    "compileAMP": "tsc && link-module-alias",
     "start": "link-module-alias && node ./dist/main.js",
     "compilerun": "tsc && link-module-alias && node ./dist/main.js"
   },
