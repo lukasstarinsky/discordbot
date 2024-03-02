@@ -316,8 +316,13 @@ export async function HandleHistory(interaction: ChatInputCommandInteraction) {
         return;
     }
 
+    const historyFormatted = history!.history.slice(-100);
+    historyFormatted.forEach((str, index) => {
+        historyFormatted[index] = "* " + str;
+    })
+
     await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(
-        history!.history.slice(-100).join("\n"),
+        historyFormatted.join("\n"),
         `${summonerName} - History`
     )] });
 }
