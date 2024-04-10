@@ -1,6 +1,7 @@
 import { CommandInteraction, ChatInputCommandInteraction } from "discord.js";
 import Insults from "~/data/insults";
 import User from "~/models/user";
+import Restriction from "~/models/restriction";
 import * as Embed from "~/utils/embed";
 
 export async function Poke(interaction: CommandInteraction) {
@@ -10,6 +11,35 @@ export async function Poke(interaction: CommandInteraction) {
 export async function Insult(interaction: ChatInputCommandInteraction) {
     const user = interaction.options.getUser("user");
     await interaction.editReply("<@" + user + "> " + Insults[Math.floor(Math.random() * Insults.length)]);
+}
+
+export async function ShowRestriction(interaction: ChatInputCommandInteraction) {
+    const userId = interaction.options.getUser("user")!;
+    const restriction = await Restriction.findOne({ user: userId });
+    const currentDate = new Date();
+
+    if (!restriction || currentDate > restriction!.until)
+        return await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`User ${userId} doesn't have any restriction`)] });
+    
+    const difference: number = restriction.until.getTime() - currentDate.getTime();
+
+    const days: number = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours: number = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes: number = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Game restriction for ${userId} is set until ${restriction!.until.toLocaleString("sk-SK")}\n
+        Remaining: ${days} Days, ${hours} Hours and ${minutes} Minutes`)] });
+}
+
+export async function SetRestriction(interaction: ChatInputCommandInteraction) {
+    const userId = interaction.options.getUser("user");
+
+    var date = new Date();
+    date.setDate(date.getDate() + interaction.options.getNumber("until")!);
+
+    await Restriction.findOneAndUpdate({ user: userId }, { until: date }, { upsert: true, new: true, setDefaultsOnInsert: true });
+
+    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Game restriction for ${userId} set until ${date.toLocaleString("sk-SK")}`)] });
 }
 
 export async function Balance(interaction: CommandInteraction) {

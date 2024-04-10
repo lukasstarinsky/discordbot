@@ -92,6 +92,12 @@ client.on("interactionCreate", async (interaction) => {
             case "insult":
                 await Misc.Insult(interaction as ChatInputCommandInteraction);
                 break;
+            case "banclock":
+                await Misc.ShowRestriction(interaction as ChatInputCommandInteraction);
+                break;
+            case "settimer":
+                await Misc.SetRestriction(interaction as ChatInputCommandInteraction);
+                break;
             case "poke":
                 await Misc.Poke(interaction);
                 break;
