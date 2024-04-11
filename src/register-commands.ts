@@ -112,6 +112,24 @@ const commands = [
         ]
     },
     {
+        name: "setresponse",
+        description: "Sets automatic response to message.",
+        options: [
+            {
+                name: "message",
+                description: "Message containts",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: "response",
+                description: "Message response",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ]
+    },
+    {
         name: "banclock",
         description: "Gets user's ban time.",
         options: [

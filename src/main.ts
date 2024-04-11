@@ -28,6 +28,7 @@ client.once("ready", async () => {
     await OnlineFix.Init();
     await Riot.Init();
     await Riot.UpdateWatchList(client);
+    await Misc.UpdateMessage();
     setInterval(async () => {
         await Riot.UpdateWatchList(client);
     }, 1000 * 60 * 15);
@@ -92,6 +93,9 @@ client.on("interactionCreate", async (interaction) => {
             case "insult":
                 await Misc.Insult(interaction as ChatInputCommandInteraction);
                 break;
+            case "setresponse":
+                await Misc.AddMessage(interaction as ChatInputCommandInteraction);
+                break;
             case "banclock":
                 await Misc.ShowRestriction(interaction as ChatInputCommandInteraction);
                 break;
@@ -131,6 +135,10 @@ client.on("interactionCreate", async (interaction) => {
         }
         console.error(err);
     }
+});
+
+client.on("messageCreate", async (message) => {
+    await Misc.CheckMessage(message);
 });
 
 client.login(process.env.TOKEN);

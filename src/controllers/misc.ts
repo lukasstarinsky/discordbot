@@ -1,8 +1,11 @@
-import { CommandInteraction, ChatInputCommandInteraction } from "discord.js";
+import { CommandInteraction, ChatInputCommandInteraction, Message } from "discord.js";
 import Insults from "~/data/insults";
 import User from "~/models/user";
+import MessageContainEntity, { MessageDocument } from "~/models/message";
 import Restriction from "~/models/restriction";
 import * as Embed from "~/utils/embed";
+
+let messageContains: Array<MessageDocument> = [];
 
 export async function Poke(interaction: CommandInteraction) {
     await interaction.editReply("startuj rift <@344971043720396810>");
@@ -11,6 +14,32 @@ export async function Poke(interaction: CommandInteraction) {
 export async function Insult(interaction: ChatInputCommandInteraction) {
     const user = interaction.options.getUser("user");
     await interaction.editReply("<@" + user + "> " + Insults[Math.floor(Math.random() * Insults.length)]);
+}
+
+export async function CheckMessage(message: Message) {
+    if (message.author.bot)
+        return;
+
+    messageContains.forEach(record => {
+        if (message.content.includes(record.message) && record.response.length > 1) {
+            message.reply(record.response);
+        }
+    });
+}
+
+export async function AddMessage(interaction: ChatInputCommandInteraction) {
+    const message = interaction.options.getString("message");
+    const response = interaction.options.getString("response");
+
+    await MessageContainEntity.findOneAndUpdate({ message: message }, { response: response }, { upsert: true, new: true, setDefaultsOnInsert: true });
+
+    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Response set !`)] });
+
+    await UpdateMessage();
+}
+
+export async function UpdateMessage() {
+    messageContains = await MessageContainEntity.find({});
 }
 
 export async function ShowRestriction(interaction: ChatInputCommandInteraction) {
