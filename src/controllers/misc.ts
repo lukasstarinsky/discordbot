@@ -20,15 +20,17 @@ export async function CheckMessage(message: Message) {
     if (message.author.bot)
         return;
 
+    const messageLower = message.content.toLowerCase();
+
     messageContains.forEach(record => {
-        if (message.content.includes(record.message) && record.response.length > 1) {
+        if (messageLower.includes(record.message) && record.response.length > 1) {
             message.reply(record.response);
         }
     });
 }
 
 export async function AddMessage(interaction: ChatInputCommandInteraction) {
-    const message = interaction.options.getString("message");
+    const message = interaction.options.getString("message")!.toLowerCase();
     const response = interaction.options.getString("response");
 
     await MessageContainEntity.findOneAndUpdate({ message: message }, { response: response }, { upsert: true, new: true, setDefaultsOnInsert: true });
