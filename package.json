@@ -11,14 +11,18 @@
   "author": "lukasstarinsky",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/voice": "^0.16.1",
     "@napi-rs/canvas": "^0.1.44",
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
     "data-dragon": "^0.0.2",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
+    "ffmpeg-static": "^5.2.0",
     "link-module-alias": "^1.2.0",
     "mongoose": "^7.5.2",
+    "play-dl": "^1.9.7",
+    "tweetnacl": "^1.0.3",
     "typescript": "^5.1.6"
   },
   "_moduleAliases": {

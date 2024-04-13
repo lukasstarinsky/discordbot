@@ -6,12 +6,21 @@ import * as Embed from "~/utils/embed";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
+import * as Sound from "~/controllers/sound";
 import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
 import "~/register-commands";
 
-const client: Client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent] });
+const client: Client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
+    ]
+});
 
 client.once("ready", async () => {
     console.log("Logging in...");
@@ -87,6 +96,17 @@ client.on("interactionCreate", async (interaction) => {
                 break;
             case "history":
                 await Riot.HandleHistory(interaction as ChatInputCommandInteraction);
+                break;
+
+            // Sound
+            case "playsound":
+                await Sound.PlaySound(interaction as ChatInputCommandInteraction);
+                break;
+            case "playsoundyt":
+                await Sound.PlaySoundFromYT(interaction as ChatInputCommandInteraction);
+                break;
+            case "stop":
+                await Sound.Stop(interaction as ChatInputCommandInteraction);
                 break;
 
             // Misc

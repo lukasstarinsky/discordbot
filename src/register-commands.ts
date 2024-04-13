@@ -154,6 +154,34 @@ const commands = [
         ]
     },
     {
+        name: "playsound",
+        description: "Plays a sound",
+        options: [
+            {
+                name: "url",
+                description: "URL of the sound",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ]
+    },
+    {
+        name: "playsoundyt",
+        description: "Plays a sound from YT",
+        options: [
+            {
+                name: "url",
+                description: "URL of the sound",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ]
+    },
+    {
+        name: "stop",
+        description: "Stops a sound",
+    },
+    {
         name: "randomgame",
         description: "Show random game from online-fix.me"
     },
