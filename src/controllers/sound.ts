@@ -47,21 +47,23 @@ export async function PlaySoundFromYT(interaction: ChatInputCommandInteraction) 
         return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
     }
 
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing YT sound from ${url}`)] });
-
+    
     const connection = joinVoiceChannel({
         channelId: member.voice.channel!.id,
         guildId: interaction.guild!.id,
         adapterCreator: interaction.guild!.voiceAdapterCreator,
     });
+    
+    const yt_info = await play.video_info(url!)
+    const stream = await play.stream_from_info(yt_info)
 
-    const stream = await play.stream(url!);
-
-    let resource = createAudioResource(stream.stream, {
+    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing from YT - **${yt_info.video_details.title}**\n${yt_info.video_details.url}`)] });
+    
+    const resource = createAudioResource(stream.stream, {
         inputType: stream.type
     });
 
-    let player = createAudioPlayer({
+    const player = createAudioPlayer({
         behaviors: {
             noSubscriber: NoSubscriberBehavior.Play
         }
