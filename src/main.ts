@@ -101,10 +101,10 @@ client.on("interactionCreate", async (interaction) => {
 
             // Sound
             case "playsound":
-                await Sound.PlaySoundFromStream(interaction as ChatInputCommandInteraction);
+                await Sound.PlaySound(interaction as ChatInputCommandInteraction);
                 break;
-            case "playsoundyt":
-                await Sound.PlaySoundFromYT(interaction as ChatInputCommandInteraction);
+            case "queue":
+                await Sound.ListQueue(interaction as ChatInputCommandInteraction);
                 break;
             case "stop":
                 await Sound.Stop(interaction as ChatInputCommandInteraction);

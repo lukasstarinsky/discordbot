@@ -1,35 +1,15 @@
-import { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, Colors, GuildMember } from "discord.js";
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection, VoiceConnection, PlayerSubscription, AudioResource } from "@discordjs/voice";
 import play from 'play-dl';
+import { QueueEntry } from "~/types/sound/QueueEntry.type";
 import * as Embed from "~/utils/embed";
 
-export async function PlaySoundFromStream(interaction: ChatInputCommandInteraction) {
+let queues: Map<string, QueueEntry[]> = new Map();
+
+export async function PlaySound(interaction: ChatInputCommandInteraction) {
+    const type = interaction.options.getString("type")!;
     const url = interaction.options.getString("url")!;
 
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing\n${url}`)] });
-    
-    const resource = createAudioResource(url);
-
-    await PlaySound(interaction, resource);
-}
-
-export async function PlaySoundFromYT(interaction: ChatInputCommandInteraction) {
-    const url = interaction.options.getString("url")!;
-
-    const yt_info = await play.video_info(url)
-    const stream = await play.stream_from_info(yt_info)
-
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing from YT - **${yt_info.video_details.title}**\n${yt_info.video_details.url}`)] });
-    
-    const resource = createAudioResource(stream.stream, {
-        inputType: stream.type
-    });
-
-    await PlaySound(interaction, resource);
-}
-
-
-async function PlaySound(interaction: ChatInputCommandInteraction, resource: AudioResource) {
     const member = interaction.member as GuildMember;
 
     if (!member.voice.channel) {
@@ -40,16 +20,25 @@ async function PlaySound(interaction: ChatInputCommandInteraction, resource: Aud
         return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
     }
 
-    let connection: VoiceConnection | undefined = getVoiceConnection(interaction.guildId!);
+    const entry = new QueueEntry(type, url);
+    const name = await entry.getName();
 
-    if (connection) {
-        connection.destroy();
+    if (queues.has(interaction.guildId!)) {
+        queues.get(interaction.guildId!)!.push(entry);
+        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Added to queue - **${name}**\n${url}`)] });
+    } else {
+        queues.set(interaction.guildId!, [entry]);
+        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Queue created, playing - **${name}**\n${url}`)] });
     }
 
-    connection = joinVoiceChannel({
-        channelId: member.voice.channel!.id,
-        guildId: interaction.guild!.id,
-        adapterCreator: interaction.guild!.voiceAdapterCreator,
+    if (getVoiceConnection(interaction.guildId!)) {
+        return;
+    }
+
+    const connection = joinVoiceChannel({
+        channelId: member.voice.channel.id,
+        guildId: interaction.guildId!,
+        adapterCreator: interaction.guild.voiceAdapterCreator
     });
 
     const player = createAudioPlayer({
@@ -58,14 +47,29 @@ async function PlaySound(interaction: ChatInputCommandInteraction, resource: Aud
         }
     });
 
-    player.play(resource);
-    const sub : PlayerSubscription = connection.subscribe(player)!;
+    player.on(AudioPlayerStatus.Idle, async (error) => {
+        if (!queues.get(interaction.guildId!)) {
+            if (connection.state.status != "destroyed")
+                connection.destroy();
+            return;
+        } else if (queues.get(interaction.guildId!)!.length == 0) {
+            if (connection.state.status != "destroyed")
+                connection.destroy();
+            queues.delete(interaction.guildId!);
+            return;
+        }
 
-    sub.player.on(AudioPlayerStatus.Idle, (error) => {
-        player.stop();
-        if (connection?.state.status !== 'destroyed')
-            connection?.destroy();
+        const nextEntry = queues.get(interaction.guildId!)!.shift()!;
+        const resource = await nextEntry.getResource();
+
+        player.play(resource);
     });
+
+    const initialEntry = queues.get(interaction.guildId!)!.shift()!;
+    const initialResource = await initialEntry.getResource();
+
+    player.play(initialResource);
+    connection.subscribe(player)!;
 }
 
 export async function Stop(interaction: ChatInputCommandInteraction) {
@@ -73,7 +77,33 @@ export async function Stop(interaction: ChatInputCommandInteraction) {
         return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
     }
 
+    if (queues.has(interaction.guildId!)) {
+        queues.delete(interaction.guildId!);
+    }
+
     getVoiceConnection(interaction.guildId!)?.destroy();
 
     await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Stopped playing sound`)] });
+}
+
+export async function ListQueue(interaction: ChatInputCommandInteraction) {
+    if (!interaction.guild) {
+        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
+    } else if (!queues.has(interaction.guildId!)) {
+        return await interaction.editReply({ embeds: [Embed.CreateInfoEmbed("Nothing is playing")] });
+    } else if (queues.get(interaction.guildId!)?.length == 0) {
+        return await interaction.editReply({ embeds: [Embed.CreateInfoEmbed("Queue is empty")] });
+    }
+
+    let queue = "";
+
+    
+    for (let i = 0; i < queues.get(interaction.guildId!)!.length; ++i) {
+        const entry = queues.get(interaction.guildId!)![i];
+        const name = await entry.getName();
+
+        queue += `${i + 1}. ${name} - ${entry.url}\n`;
+    }
+
+    await interaction.editReply({ embeds: [Embed.CreateEmbed("Queue list", Colors.Aqua, queue)] });
 }

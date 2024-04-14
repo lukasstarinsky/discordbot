@@ -158,28 +158,36 @@ const commands = [
         description: "Plays a sound",
         options: [
             {
-                name: "url",
-                description: "URL of the sound",
+                name: "type",
+                description: "Url Type",
                 type: ApplicationCommandOptionType.String,
-                required: true
-            }
-        ]
-    },
-    {
-        name: "playsoundyt",
-        description: "Plays a sound from YT",
-        options: [
+                required: true,
+                choices: [
+                    {
+                        name: "YouTube",
+                        value: "yt"
+                    },
+                    {
+                        name: "Sound File Link",
+                        value: "stream",
+                    }
+                ]
+            },
             {
                 name: "url",
                 description: "URL of the sound",
                 type: ApplicationCommandOptionType.String,
-                required: true
+                required: true,
             }
         ]
     },
     {
         name: "stop",
         description: "Stops a sound",
+    },
+    {
+        name: "queue",
+        description: "Lists the queue",
     },
     {
         name: "randomgame",
