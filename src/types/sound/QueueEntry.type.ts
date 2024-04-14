@@ -8,12 +8,17 @@ export enum QueueEntryType {
 };
 
 export class QueueEntry {
-    type: QueueEntryType;
+    type: QueueEntryType = QueueEntryType.Unknown;
     url: string;
 
-    constructor(type: QueueEntryType, url: string) {
-        this.type = type;
+    constructor(url: string) {
         this.url = url;
+
+        if (url.includes("youtube") || url.includes("youtu.be")) {
+            this.type = QueueEntryType.Youtube;
+        } else if (url.endsWith(".mp3")) {
+            this.type = QueueEntryType.Stream;
+        }
     }
 
     async getName() {

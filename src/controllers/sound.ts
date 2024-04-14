@@ -17,15 +17,8 @@ export async function Play(interaction: ChatInputCommandInteraction) {
     } else if (!interaction.guild) {
         return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
     }
-
-    let type = QueueEntryType.Unknown;
-    if (url.includes("youtube") || url.includes("youtu.be")) {
-        type = QueueEntryType.Youtube;
-    } else if (url.endsWith(".mp3")) {
-        type = QueueEntryType.Stream;
-    }
     
-    const entry = new QueueEntry(type, url);
+    const entry = new QueueEntry(url);
     const name = await entry.getName();
 
     if (queues.has(interaction.guildId!)) {
