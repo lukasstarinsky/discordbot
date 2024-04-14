@@ -11,6 +11,7 @@ import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
 import "~/register-commands";
+import play from 'play-dl';
 
 const client: Client = new Client({
     intents: [
@@ -100,7 +101,7 @@ client.on("interactionCreate", async (interaction) => {
 
             // Sound
             case "playsound":
-                await Sound.PlaySound(interaction as ChatInputCommandInteraction);
+                await Sound.PlaySoundFromStream(interaction as ChatInputCommandInteraction);
                 break;
             case "playsoundyt":
                 await Sound.PlaySoundFromYT(interaction as ChatInputCommandInteraction);

@@ -1,60 +1,22 @@
 import { ChatInputCommandInteraction, GuildMember } from "discord.js";
-import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection } from "@discordjs/voice";
+import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection, VoiceConnection, PlayerSubscription, AudioResource } from "@discordjs/voice";
 import play from 'play-dl';
 import * as Embed from "~/utils/embed";
 
-export async function PlaySound(interaction: ChatInputCommandInteraction) {
-    const url = interaction.options.getString("url");
+export async function PlaySoundFromStream(interaction: ChatInputCommandInteraction) {
+    const url = interaction.options.getString("url")!;
 
-    const member = interaction.member as GuildMember;
+    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing\n${url}`)] });
+    
+    const resource = createAudioResource(url);
 
-    if (!member.voice.channel) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("You need to be in a voice channel to use this command")] });
-    } else if (!member.voice.channel.joinable) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I don't have permission to join your voice channel")] });
-    } else if (!interaction.guild) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
-    }
-
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing sound from ${url}`)] });
-
-    const connection = joinVoiceChannel({
-        channelId: member.voice.channel!.id,
-        guildId: interaction.guild!.id,
-        adapterCreator: interaction.guild!.voiceAdapterCreator,
-    });
-
-    const player = createAudioPlayer();
-    connection.subscribe(player);
-
-    player.on(AudioPlayerStatus.Idle, () => {
-        connection.disconnect();
-    });
-
-    player.play(createAudioResource(url!));
+    await PlaySound(interaction, resource);
 }
 
 export async function PlaySoundFromYT(interaction: ChatInputCommandInteraction) {
-    const url = interaction.options.getString("url");
+    const url = interaction.options.getString("url")!;
 
-    const member = interaction.member as GuildMember;
-
-    if (!member.voice.channel) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("You need to be in a voice channel to use this command")] });
-    } else if (!member.voice.channel.joinable) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I don't have permission to join your voice channel")] });
-    } else if (!interaction.guild) {
-        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
-    }
-
-    
-    const connection = joinVoiceChannel({
-        channelId: member.voice.channel!.id,
-        guildId: interaction.guild!.id,
-        adapterCreator: interaction.guild!.voiceAdapterCreator,
-    });
-    
-    const yt_info = await play.video_info(url!)
+    const yt_info = await play.video_info(url)
     const stream = await play.stream_from_info(yt_info)
 
     await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Playing from YT - **${yt_info.video_details.title}**\n${yt_info.video_details.url}`)] });
@@ -63,18 +25,47 @@ export async function PlaySoundFromYT(interaction: ChatInputCommandInteraction) 
         inputType: stream.type
     });
 
+    await PlaySound(interaction, resource);
+}
+
+
+async function PlaySound(interaction: ChatInputCommandInteraction, resource: AudioResource) {
+    const member = interaction.member as GuildMember;
+
+    if (!member.voice.channel) {
+        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("You need to be in a voice channel to use this command")] });
+    } else if (!member.voice.channel.joinable) {
+        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I don't have permission to join your voice channel")] });
+    } else if (!interaction.guild) {
+        return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
+    }
+
+    let connection: VoiceConnection | undefined = getVoiceConnection(interaction.guildId!);
+
+    if (connection) {
+        connection.destroy();
+    }
+
+    connection = joinVoiceChannel({
+        channelId: member.voice.channel!.id,
+        guildId: interaction.guild!.id,
+        adapterCreator: interaction.guild!.voiceAdapterCreator,
+    });
+
     const player = createAudioPlayer({
         behaviors: {
             noSubscriber: NoSubscriberBehavior.Play
         }
     });
 
-    player.on(AudioPlayerStatus.Idle, () => {
-        connection.disconnect();
-    });
-
     player.play(resource);
-    connection.subscribe(player);
+    const sub : PlayerSubscription = connection.subscribe(player)!;
+
+    sub.player.on(AudioPlayerStatus.Idle, (error) => {
+        player.stop();
+        if (connection?.state.status !== 'destroyed')
+            connection?.destroy();
+    });
 }
 
 export async function Stop(interaction: ChatInputCommandInteraction) {
