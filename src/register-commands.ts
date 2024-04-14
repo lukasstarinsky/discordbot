@@ -154,25 +154,9 @@ const commands = [
         ]
     },
     {
-        name: "playsound",
+        name: "play",
         description: "Plays a sound",
         options: [
-            {
-                name: "type",
-                description: "Url Type",
-                type: ApplicationCommandOptionType.String,
-                required: true,
-                choices: [
-                    {
-                        name: "YouTube",
-                        value: "yt"
-                    },
-                    {
-                        name: "Sound File Link",
-                        value: "stream",
-                    }
-                ]
-            },
             {
                 name: "url",
                 description: "URL of the sound",

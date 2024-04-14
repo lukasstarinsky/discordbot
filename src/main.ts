@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, ChatInputCommandInteraction } from "discord.js";
 import mongoose from "mongoose";
 import "dotenv/config";
-import { Mines, Poker } from "~/controllers/minigames";
+import { Mines } from "~/controllers/minigames";
 import * as Embed from "~/utils/embed";
 import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
@@ -11,7 +11,6 @@ import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
 import "~/register-commands";
-import play from 'play-dl';
 
 const client: Client = new Client({
     intents: [
@@ -100,8 +99,8 @@ client.on("interactionCreate", async (interaction) => {
                 break;
 
             // Sound
-            case "playsound":
-                await Sound.PlaySound(interaction as ChatInputCommandInteraction);
+            case "play":
+                await Sound.Play(interaction as ChatInputCommandInteraction);
                 break;
             case "queue":
                 await Sound.ListQueue(interaction as ChatInputCommandInteraction);

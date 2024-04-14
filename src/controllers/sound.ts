@@ -1,13 +1,11 @@
 import { ChatInputCommandInteraction, Colors, GuildMember } from "discord.js";
-import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection, VoiceConnection, PlayerSubscription, AudioResource } from "@discordjs/voice";
-import play from 'play-dl';
-import { QueueEntry } from "~/types/sound/QueueEntry.type";
+import { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection } from "@discordjs/voice";
+import { QueueEntry, QueueEntryType } from "~/types/sound/QueueEntry.type";
 import * as Embed from "~/utils/embed";
 
 let queues: Map<string, QueueEntry[]> = new Map();
 
-export async function PlaySound(interaction: ChatInputCommandInteraction) {
-    const type = interaction.options.getString("type")!;
+export async function Play(interaction: ChatInputCommandInteraction) {
     const url = interaction.options.getString("url")!;
 
     const member = interaction.member as GuildMember;
@@ -20,6 +18,13 @@ export async function PlaySound(interaction: ChatInputCommandInteraction) {
         return await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("I can't find the guild you are in")] });
     }
 
+    let type = QueueEntryType.Unknown;
+    if (url.includes("youtube") || url.includes("youtu.be")) {
+        type = QueueEntryType.Youtube;
+    } else if (url.endsWith(".mp3")) {
+        type = QueueEntryType.Stream;
+    }
+    
     const entry = new QueueEntry(type, url);
     const name = await entry.getName();
 
@@ -96,7 +101,6 @@ export async function ListQueue(interaction: ChatInputCommandInteraction) {
     }
 
     let queue = "";
-
     
     for (let i = 0; i < queues.get(interaction.guildId!)!.length; ++i) {
         const entry = queues.get(interaction.guildId!)![i];
