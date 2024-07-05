@@ -54,6 +54,10 @@ const commands = [
         description: "Show your balance"
     },
     {
+        name: "hitpoint",
+        description: "Shows HitPoint stats"
+    },
+    {
         name: "top10",
         description: "Shows the TOP 10 users"
     },

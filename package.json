@@ -22,10 +22,15 @@
     "link-module-alias": "^1.2.0",
     "mongoose": "^7.5.2",
     "play-dl": "^1.9.7",
+    "puppeteer": "^22.12.1",
+    "request": "^2.88.2",
     "tweetnacl": "^1.0.3",
     "typescript": "^5.1.6"
   },
   "_moduleAliases": {
     "~": "dist"
+  },
+  "devDependencies": {
+    "@types/request": "^2.48.12"
   }
 }

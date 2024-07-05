@@ -8,6 +8,7 @@ import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Sound from "~/controllers/sound";
 import * as Movies from "~/controllers/movies";
+import * as HitPoint from "~/controllers/hitpoint";
 import User from "~/models/user";
 import BotData from "~/models/botdata";
 import "~/register-commands";
@@ -130,6 +131,11 @@ client.on("interactionCreate", async (interaction) => {
                 break;
             case "top10":
                 await Misc.Top10(interaction);
+                break;
+
+            // HitPoint
+            case "hitpoint":
+                await HitPoint.HitPointStats(interaction);
                 break;
 
             // OnlineFix
