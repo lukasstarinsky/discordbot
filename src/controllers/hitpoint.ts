@@ -38,14 +38,14 @@ export async function HitPointStats(interaction: CommandInteraction) {
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "50px Ubuntu";
+    context.font = "45px Georgia";
     context.fillStyle = "#FFFFFF";
     context.fillText("Hitpoint 3rd Division Summer Season", width / 2, 50);
 
     for (let i = 0; i < stats.length; i++) {
         context.textAlign = "left";
         context.textBaseline = "middle";
-        context.font = "40px Ubuntu";
+        context.font = "40px Georgia";
         context.fillStyle = "#FFFFFF";
         const img = await Canvas.loadImage(stats[i].logo);
         context.drawImage(img, 50, i * rowHeight + paddingTop - imageSize / 2, imageWidth, imageSize);
@@ -55,14 +55,11 @@ export async function HitPointStats(interaction: CommandInteraction) {
         } else {
             context.fillText("-", 25, i * rowHeight + paddingTop);
         }
-    
 
         context.fillText(stats[i].name, 175, i * rowHeight + paddingTop);
-        
+
         context.textAlign = "right";
         context.fillText(stats[i].score, width - 25, i * rowHeight + paddingTop);
-
-        console.log("Drawing image " + stats[i].name);
     }
 
     const attachment = new AttachmentBuilder(await canvas.encode("png"), { name: "ingame_data.png" });
