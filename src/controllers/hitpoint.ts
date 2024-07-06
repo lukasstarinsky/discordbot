@@ -2,6 +2,7 @@ import { CommandInteraction, ChatInputCommandInteraction, Message, EmbedBuilder,
 import { load } from "cheerio";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
+import { registerFont } from "canvas";
 
 export async function HitPointStats(interaction: CommandInteraction) {
     const url = "https://lol.fandom.com/wiki/Hitpoint_3rd_Division/2024_Season/Summer_Season";
@@ -31,6 +32,7 @@ export async function HitPointStats(interaction: CommandInteraction) {
     const imageSize = 50;
     const imageWidth = 120;
 
+    registerFont("/usr/share/fonts/truetype/msttcorefonts/arial.ttf", { family: "Arial" });
     const canvas = Canvas.createCanvas(width, height);
     const context = canvas.getContext("2d");
 

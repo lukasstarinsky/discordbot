@@ -13,7 +13,9 @@
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
     "@napi-rs/canvas": "^0.1.44",
+    "@types/node": "^20.14.10",
     "axios": "^1.4.0",
+    "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",
     "data-dragon": "^0.0.2",
     "discord.js": "^14.11.0",
