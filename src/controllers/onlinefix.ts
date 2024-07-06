@@ -7,7 +7,7 @@ let games: Game[] = [];
 export async function Init() {
     console.log("Loading games...");
     try {
-        //games = await Service.LoadGames();
+        games = await Service.LoadGames();
     } catch(err) {
         console.log("Failed to load games.");
     }
