@@ -3,6 +3,7 @@ import { load } from "cheerio";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
 import { registerFont } from "canvas";
+import path from "path";
 
 export async function HitPointStats(interaction: CommandInteraction) {
     const url = "https://lol.fandom.com/wiki/Hitpoint_3rd_Division/2024_Season/Summer_Season";
@@ -32,7 +33,7 @@ export async function HitPointStats(interaction: CommandInteraction) {
     const imageSize = 50;
     const imageWidth = 120;
 
-    registerFont("/usr/share/fonts/truetype/msttcorefonts/arial.ttf", { family: "Arial" });
+    //registerFont("/usr/share/fonts/truetype/msttcorefonts/arial.ttf", { family: "Arial" });
     const canvas = Canvas.createCanvas(width, height);
     const context = canvas.getContext("2d");
 
@@ -40,7 +41,7 @@ export async function HitPointStats(interaction: CommandInteraction) {
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "45px Arial";
+    context.font = "45px DejaVu Sans";
     context.fillStyle = "#FFFFFF";
     context.fillText("Hitpoint 3rd Division Summer Season", width / 2, 50);
 
