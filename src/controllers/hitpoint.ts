@@ -38,14 +38,14 @@ export async function HitPointStats(interaction: CommandInteraction) {
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "45px Georgia";
+    context.font = "45px Arial";
     context.fillStyle = "#FFFFFF";
     context.fillText("Hitpoint 3rd Division Summer Season", width / 2, 50);
 
     for (let i = 0; i < stats.length; i++) {
         context.textAlign = "left";
         context.textBaseline = "middle";
-        context.font = "40px Georgia";
+        context.font = "40px Arial";
         context.fillStyle = "#FFFFFF";
         const img = await Canvas.loadImage(stats[i].logo);
         context.drawImage(img, 50, i * rowHeight + paddingTop - imageSize / 2, imageWidth, imageSize);
