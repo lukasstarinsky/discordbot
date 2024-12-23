@@ -26,7 +26,7 @@ pipeline {
             sh '''
               kubectl set image --namespace discordbot \
                 deployment/bot-deployment \
-                frontend=harbor.k8s.spmservers.eu/discordbot/discordbot:v${BUILD_NUMBER}
+                discordbot=harbor.k8s.spmservers.eu/discordbot/discordbot:v${BUILD_NUMBER}
               '''
           }
         }
