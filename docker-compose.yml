@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+
+  backend:
+    container_name: discordbot
+    hostname: discordbot
+    build:
+      context: ./
+    labels:
+      name: discordbot
