@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, Colors, GuildMember } from "discord.js";
 import { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus,  NoSubscriberBehavior, getVoiceConnection } from "@discordjs/voice";
-import { QueueEntry, QueueEntryType } from "~/types/sound/QueueEntry.type";
+import { QueueEntry } from "~/types/sound/QueueEntry.type";
 import * as Embed from "~/utils/embed";
 
 let queues: Map<string, QueueEntry[]> = new Map();
@@ -36,7 +36,8 @@ export async function Play(interaction: ChatInputCommandInteraction) {
     const connection = joinVoiceChannel({
         channelId: member.voice.channel.id,
         guildId: interaction.guildId!,
-        adapterCreator: interaction.guild.voiceAdapterCreator
+        // TODO(peto): fix
+        adapterCreator: interaction.guild.voiceAdapterCreator as any
     });
 
     const player = createAudioPlayer({

@@ -2,7 +2,6 @@ import { CommandInteraction, ChatInputCommandInteraction, Message } from "discor
 import Insults from "~/data/insults";
 import User from "~/models/user";
 import MessageContainEntity, { MessageDocument } from "~/models/message";
-import Restriction from "~/models/restriction";
 import * as Embed from "~/utils/embed";
 
 let messageContains: Array<MessageDocument> = [];

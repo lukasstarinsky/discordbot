@@ -2,8 +2,6 @@ import { CommandInteraction, ChatInputCommandInteraction, Message, EmbedBuilder,
 import { load } from "cheerio";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
-import { registerFont } from "canvas";
-import path from "path";
 
 export async function HitPointStats(interaction: CommandInteraction) {
     const url = "https://lol.fandom.com/wiki/Hitpoint_3rd_Division/2024_Season/Summer_Season";
