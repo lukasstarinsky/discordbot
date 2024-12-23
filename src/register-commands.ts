@@ -15,41 +15,6 @@ const commands = [
         ]
     },
     {
-        name: "movies",
-        description: "Manage movie database",
-        options: [
-            {
-                name: "action",
-                description: "Select an action to perform",
-                type: ApplicationCommandOptionType.String,
-                required: true,
-                choices: [
-                    {
-                        name: "add",
-                        value: "add",
-                    },
-                    {
-                        name: "list",
-                        value: "all"
-                    },
-                    {
-                        name: "mark-watched",
-                        value: "markwatched",
-                    },
-                    {
-                        name: "random",
-                        value: "random",
-                    }
-                ]
-            },
-            {
-                name: "data",
-                type: ApplicationCommandOptionType.String,
-                description: "Movie names (comma separated)"
-            }
-        ]
-    },
-    {
         name: "balance",
         description: "Show your balance"
     },
@@ -62,10 +27,16 @@ const commands = [
         description: "Show data of selected summoner",
         options: [
             {
-                name: "summoner",
-                description: "Name of the summoner",
+                name: "account",
+                description: "Account name (including tag)",
                 type: ApplicationCommandOptionType.String,
                 required: true
+            },
+            {
+                name: "region",
+                description: "Account region (eun1, euw1, na1), default: eun1",
+                type: ApplicationCommandOptionType.String,
+                required: false
             }
         ]
     },
@@ -74,10 +45,16 @@ const commands = [
         description: "Show losestreak of selected summoner",
         options: [
             {
-                name: "summoner",
-                description: "Name of the summoner",
+                name: "account",
+                description: "Account name (including tag)",
                 type: ApplicationCommandOptionType.String,
                 required: true
+            },
+            {
+                name: "region",
+                description: "Account region (eun1, euw1, na1), default: eun1",
+                type: ApplicationCommandOptionType.String,
+                required: false
             }
         ]
     },
@@ -146,10 +123,16 @@ const commands = [
         description: "Show ingame summoner info",
         options: [
             {
-                name: "summoner",
-                description: "Name of the summoner",
+                name: "account",
+                description: "Account name (including tag)",
                 type: ApplicationCommandOptionType.String,
                 required: true
+            },
+            {
+                name: "region",
+                description: "Account region (eun1, euw1, na1), default: eun1",
+                type: ApplicationCommandOptionType.String,
+                required: false
             }
         ]
     },
@@ -173,49 +156,6 @@ const commands = [
         name: "queue",
         description: "Lists the queue",
     },
-    {
-        name: "randomgame",
-        description: "Show random game from online-fix.me"
-    },
-    {
-        name: "watchlist",
-        description: "'Add to', 'Remove from' or 'View' the current watchlist",
-        options: [
-            {
-                name: "action",
-                description: "Action to perform on watchlist",
-                type: ApplicationCommandOptionType.String,
-                required: true,
-                choices: [
-                    { name: "add", value: "add" },
-                    { name: "remove", value: "remove" },
-                    { name: "current", value: "current" },
-                ]
-            },
-            {
-                name: "summoner",
-                description: "Name of the summoner",
-                type: ApplicationCommandOptionType.String,
-                required: false
-            }
-        ]
-    },
-    {
-        name: "history",
-        description: "Get history of selected summoner (must be in watchlist)",
-        options: [
-            {
-                name: "summoner",
-                description: "Name of the summoner",
-                type: ApplicationCommandOptionType.String,
-                required: true
-            }
-        ]
-    },
-    {
-        name: "poke",
-        description: "Notifies discord user 'Tonski' to hop on League"
-    }
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN!);

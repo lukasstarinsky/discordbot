@@ -1,19 +1,16 @@
-import { ChatInputCommandInteraction, EmbedBuilder, Client, TextChannel, AttachmentBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from "discord.js";
 import fs from "fs";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
-import { DataDragon } from "data-dragon";
 import { LeagueEntryDTO } from "~/types/riot";
+import { Champions } from "~/types/riot/ddragon";
 import * as Service from "~/services/riot";
 import * as Embed from "~/utils/embed";
-import Constants from "~/data/constants";
-import BotData from "~/models/botdata";
-import History from "~/models/history";
+import { Urls } from "~/data/constants";
 import "~/utils/string";
 
-// Todo: Use custom parsed json
-let dragon: DataDragon;
 let liveGameBackground: Canvas.Image;
+let champions: Champions;
 const playerRect = {
     x: 240, 
     y: 6, 
@@ -34,62 +31,65 @@ const playerRect2 = {
     centerY: 529 + (456 / 2)
 };
 
-export async function Init() {
-    console.log("Fetching ddragon...");
-    dragon = await DataDragon.latest();
-    await dragon.champions.fetch();
-    await dragon.items.fetch();
+export async function Initialize() {
+    console.log("Fetching lol champion images...");
 
     if (!fs.existsSync("./assets/champions")) {
-        console.log("Downloading champion images...");
-
         fs.mkdirSync("./assets/champions");
-        dragon.champions.forEach(async (champion) => {
-            const response = await axios(Constants.CHAMP_ICON + champion.image.full, { method: "GET", responseType: "stream"});
-            response.data.pipe(fs.createWriteStream(`./assets/champions/${champion.image.full}`));
-        });
-
-        console.log("Champion images downloaded.");
     }
+
+    const response = await axios.get<Champions>(Urls.DDRAGON_CHAMPIONS);
+    champions = response.data;
+    Object.entries(champions.data).forEach(async ([key, value]) => {
+        const iconResponse = await axios.get(Urls.DDRAGON_CHAMPION_ICON + value.image.full, { responseType: "stream" });
+        iconResponse.data.pipe(fs.createWriteStream(`./assets/champions/${value.image.full}`));
+    });
 
     liveGameBackground = await Canvas.loadImage("./assets/loading_screen.png");
 }
 
 export async function HandleLoseStreak(interaction: ChatInputCommandInteraction) {
-    const summonerName = interaction.options.getString("summoner")!;
-    let summoner;
+    const accountNameTag = interaction.options.getString("account")!.split("#");
+    const region = interaction.options.getString("region") || "eun1";
+    const name = accountNameTag[0];
+    const tag = accountNameTag[1];
     
+    let account;
     try {
-        summoner = await Service.GetSummoner(summonerName);
+        account = await Service.GetAccount(name, tag);
     } catch (err: any) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`)] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
         return;
     }
-    const loseStreak = await Service.GetLoseStreak(summoner);
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** has lose streak of ${loseStreak} ${loseStreak == 1 ? "game": "games"}.`)] });
+    const loseStreak = await Service.GetLoseStreak(account);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`**${name}** Lose Streak`)
+        .setThumbnail(loseStreak > 0 ? Urls.CLASSIC_DUCK : null)
+        .setFields({ name: "Lose Streak", value: `${loseStreak} ${loseStreak > 1 ? "games": "game"}`, inline: true });
+
+    await interaction.editReply({ embeds: [embed] });
 }
 
 export async function HandleSummonerData(interaction: ChatInputCommandInteraction) {
-    const summonerName = interaction.options.getString("summoner")!;
+    const accountNameTag = interaction.options.getString("account")!.split("#");
+    const region = interaction.options.getString("region") || "eun1";
+    const name = accountNameTag[0];
+    const tag = accountNameTag[1];
 
-    let summoner;
+    let account;
     try {
-        summoner = await Service.GetSummoner(summonerName);
+        account = await Service.GetAccount(name, tag);
     } catch (err) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`)] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#** doesn't exist.`)] });
         return;
     }
-    const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
-    const lastGame = await Service.GetLastMatch(summoner);
-    const summonerLastGameStats = Service.GetSummonerStatsFromMatch(lastGame, summoner);
-
-    if (!summoner || !soloLeagueEntry || !lastGame || !summonerLastGameStats) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** couldn't be loaded.`)] });
-        return;
-    }
+    const soloLeagueEntry = await Service.GetSoloLeagueEntry(account, region);
+    const lastGame = await Service.GetLastMatch(account);
+    const summonerLastGameStats = Service.GetSummonerStatsFromMatch(lastGame, account);
 
     const challenges = summonerLastGameStats.challenges;
-    
+
     const kda = challenges.kda;
     const winrate = (soloLeagueEntry.wins / (soloLeagueEntry.wins + soloLeagueEntry.losses)) * 100;
     const damagePercentage = challenges.teamDamagePercentage * 100;
@@ -105,7 +105,7 @@ export async function HandleSummonerData(interaction: ChatInputCommandInteractio
     const lane = summonerLastGameStats.lane;
 
     const messageEmbed = new EmbedBuilder()
-        .setTitle(summoner.name)
+        .setTitle(name)
         .setColor(summonerLastGameStats.win ? 0x00FF00 : 0xFF0000)
         .setFields(
             { name: "Rank", value: `**${soloLeagueEntry.tier.toLowerCase().capitalize()} ${soloLeagueEntry.rank}** ${soloLeagueEntry.leaguePoints} LP`, inline: true },
@@ -120,8 +120,7 @@ export async function HandleSummonerData(interaction: ChatInputCommandInteractio
             { name: "CS First 10 minutes", value: `${csFirstTenMinutes}`, inline: true },
             { name: "Role", value: `**${champion}** - ${lane}` }
         )
-        .setThumbnail(Constants.CHAMP_ICON + summonerLastGameStats.championName + ".png")
-        .setImage(summonerLastGameStats.summonerName === "Tonski" && !summonerLastGameStats.win ? Constants.LOSE_ICON : null)
+        .setThumbnail(Urls.DDRAGON_CHAMPION_ICON + summonerLastGameStats.championName + ".png")
         .setFooter({
             text: `${gameType}${new Date(lastGame.info.gameEndTimestamp).toLocaleString("sk-SK", {
                 day: '2-digit',
@@ -133,32 +132,32 @@ export async function HandleSummonerData(interaction: ChatInputCommandInteractio
                 timeZone: 'Europe/Bratislava'
             })}`
         });
-    await interaction.editReply({ embeds: [messageEmbed ]});
+    await interaction.editReply({ embeds: [messageEmbed] });
 }
 
 export async function HandleInGameData(interaction: ChatInputCommandInteraction) {
-    const summonerName = interaction.options.getString("summoner")!;
     const canvas = Canvas.createCanvas(1920, 989);
     const context = canvas.getContext("2d");
 
     // Background
     context.drawImage(liveGameBackground, 0, 0, canvas.width, canvas.height);
 
-    const summoner = await Service.GetSummoner(summonerName);
+    const accountNameTag = interaction.options.getString("account")!.split("#");
+    const region = interaction.options.getString("region") || "eun1";
+    const name = accountNameTag[0];
+    const tag = accountNameTag[1];
+
     let gameInfo;
+    let account;
     try {
-        gameInfo = await Service.GetCurrentActiveMatch(summoner);
+        account = await Service.GetAccount(name, tag);
+        gameInfo = await Service.GetCurrentActiveMatch(account, region);
     } catch(err: any) {
         if (err.response && err.response.status == 404) {
-            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in-game.`)] });
+            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${name}#${tag}** is not in-game.`)] });
         } else {
             await interaction.editReply({ embeds: [Embed.CreateErrorEmbed("Something went wrong.")] });
         }
-        return;
-    }
-
-    if (!summoner || !gameInfo) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** couldn't be loaded.`)] });
         return;
     }
 
@@ -176,9 +175,9 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     // Players
     let count = 0;
     for (let participant of gameInfo.participants) {
-        const participantChamp = dragon.champions.find((champion) => champion.key === String(participant.championId))
-        const summoner = await Service.GetSummonerById(participant.summonerId);
-        let soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
+        const champion = Object.entries(champions.data).find(([key, value]) => value.key === String(participant.championId) );
+        const summoner = await Service.GetAccountByPUUID(participant.puuid);
+        let soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner, region);
 
         if (!soloLeagueEntry) {
             soloLeagueEntry = {} as LeagueEntryDTO;
@@ -194,18 +193,20 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
         // context.strokeRect(rect.x + index * rect.spacing, rect.y, rect.w, rect.h);
 
         // Champion image
-        const champion = await Canvas.loadImage(`./assets/champions/${participantChamp!.id}.png`);
-        context.drawImage(champion, rect.centerX - 120 / 2 + index * rect.spacing, rect.y + 60, 120, 120);
+        const championIcon = await Canvas.loadImage(`./assets/champions/${champion![1].image.full}`);
+        context.drawImage(championIcon, rect.centerX - 120 / 2 + index * rect.spacing, rect.y + 60, 120, 120);
         
         // Summoner info
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.fillStyle = "#FFFFFF";
         context.font = "bold 25px Georgia";
-        context.fillText(`${participantChamp?.name}`, rect.centerX + index * rect.spacing, rect.centerY);
+        context.fillText(`${champion![0]}`, rect.centerX + index * rect.spacing, rect.centerY);
         context.font = "20px Georgia";
-        context.fillText(participant.summonerName, rect.centerX + index * rect.spacing, rect.centerY + 35);
+        context.fillText(summoner.gameName, rect.centerX + index * rect.spacing, rect.centerY + 35);
         context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 70);
+        context.fillText(`${soloLeagueEntry.leaguePoints} LP`, rect.centerX + index * rect.spacing, rect.centerY + 95);
+        
         ++count;
     }
     
@@ -217,112 +218,12 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     context.fillText("Bans", 118, canvas.height / 2 - 300);
     count = 0;
     for (let banned of gameInfo.bannedChampions) {
-        const bannedChamp = dragon.champions.find((champion) => champion.key === String(banned.championId));
-        const champion = await Canvas.loadImage(`./assets/champions/${bannedChamp!.id}.png`);
-        context.drawImage(champion, 118 - 25, canvas.height / 2 + count * 60 - 270, 50, 50);
+        const champion = Object.entries(champions.data).find(([key, value]) => value.key === String(banned.championId));
+        const championIcon = await Canvas.loadImage(`./assets/champions/${champion![1].image.full}`);
+        context.drawImage(championIcon, 118 - 25, canvas.height / 2 + count * 60 - 270, 50, 50);
         ++count;
     }
 
     const attachment = new AttachmentBuilder(await canvas.encode("png"), { name: "ingame_data.png" });
     await interaction.editReply({ files: [attachment] });
-}
-
-export async function UpdateWatchList(client: Client) {
-    const guilds = await BotData.find();
-    
-    guilds.forEach(async (guild) => {
-        for (let summonerName of guild.watchlist!) {
-            const summoner = await Service.GetSummoner(summonerName);
-            const soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner);
-
-            if (!summoner || !soloLeagueEntry) {
-                return;
-            }
-
-            const stat = new Date().toLocaleString("sk-SK", {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hourCycle: 'h24',
-                timeZone: 'Europe/Bratislava'
-            }) + " - " + soloLeagueEntry.tier + " " + soloLeagueEntry.rank + " " + soloLeagueEntry.leaguePoints;
-
-            await History.updateOne({ summoner: summonerName }, { $push: { history: stat } });
-        }
-    });
-};
-
-export async function HandleWatchList(interaction: ChatInputCommandInteraction) {
-    const action = interaction.options.getString("action");
-    const summonerName = interaction.options.getString("summoner") || "Tonski";
-    const data = await BotData.findOne({ guildId: interaction.guildId });
-    const watchlist = data!.watchlist;
-
-    if (action === "add") {
-        if (watchlist.includes(summonerName)) {
-            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is already in watchlist.`)] });
-            return;
-        }
-
-        try {
-            const summoner = await Service.GetSummoner(summonerName);
-        } catch (err) {
-            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Summoner **${summonerName}** doesn't exist.`)] });
-            return;
-        }
-
-        const history = await History.findOne({ summoner: summonerName });
-        if (!history) {
-            const historyNew = new History({
-                summoner: summonerName,
-                history: []
-            });
-            await historyNew.save();
-        }
-        
-        await data!.updateOne({ $push: { "watchlist": summonerName } });
-        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was added to watchlist.`)] });
-    } else if (action === "remove") {
-        if (!watchlist.includes(summonerName)) {
-            await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
-            return;
-        }
-
-        await data!.updateOne({ $pull: { "watchlist": summonerName } });
-        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`**${summonerName}** was removed from watchlist.`)] });
-    } else {
-        await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Current watchlist: **${watchlist}**`)] });
-    }
-}
-
-export async function HandleHistory(interaction: ChatInputCommandInteraction) {
-    const summonerName = interaction.options.getString("summoner")!;
-    const data = await BotData.findOne({ guildId: interaction.guildId });
-    const watchlist = data!.watchlist;
-
-    if (!watchlist.includes(summonerName)) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`**${summonerName}** is not in watchlist.`)] });
-        return;
-    }
-    
-    // Can send up to 4096 characters in embed, 100 history lines
-
-    const history = await History.findOne({ summoner: summonerName });
-
-    if (history!.history.length === 0) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`${summonerName} has no logged history yet.`)] });
-        return;
-    }
-
-    const historyFormatted = history!.history.slice(-100);
-    historyFormatted.forEach((str, index) => {
-        historyFormatted[index] = "* " + str;
-    })
-
-    await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(
-        historyFormatted.join("\n"),
-        `${summonerName} - History`
-    )] });
 }

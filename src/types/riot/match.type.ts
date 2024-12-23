@@ -1,3 +1,13 @@
+export enum QueueID {
+    SoloQ = 420,
+    FlexQ = 440
+}
+
+export const QueueString = {
+    420: "SoloQ",
+    440: "FlexQ"
+}
+
 export type MatchDto = {
     metadata: MetadataDto,
     info: InfoDto
@@ -256,7 +266,7 @@ export type ParticipantDto = {
     profileIcon: number,
     puuid: string,
     quadraKills: number,
-    riotIdName: string,
+    riotIdGameName: string,
     riotIdTagline: string,
     role: string,
     sightWardsBoughtInGame: number,

@@ -3,13 +3,10 @@ import mongoose from "mongoose";
 import "dotenv/config";
 import { Mines } from "~/controllers/minigames";
 import * as Embed from "~/utils/embed";
-import * as OnlineFix from "~/controllers/onlinefix";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Sound from "~/controllers/sound";
-import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
-import BotData from "~/models/botdata";
 import "~/register-commands";
 
 const client: Client = new Client({
@@ -34,13 +31,7 @@ client.once("ready", async () => {
         process.exit(69);
     }
     
-    await OnlineFix.Init();
-    await Riot.Init();
-    await Riot.UpdateWatchList(client);
-    await Misc.UpdateMessage();
-    setInterval(async () => {
-        await Riot.UpdateWatchList(client);
-    }, 1000 * 60 * 15);
+    await Riot.Initialize();
 
     console.log(`Logged in as ${client.user?.tag}!`);
 });
@@ -61,12 +52,6 @@ client.on("ready", async () => {
                     await newUserData.save();
                 }
             });
-
-            const data = await BotData.findOne({ guildId: guild.id });
-            if (!data) {
-                const newData = new BotData({ guildId: guild.id });
-                await newData.save();
-            }
         });
     } catch (err: any) {
         console.error("Failed to create initial data");
@@ -91,12 +76,6 @@ client.on("interactionCreate", async (interaction) => {
             case "ingame":
                 await Riot.HandleInGameData(interaction as ChatInputCommandInteraction);
                 break;
-            case "watchlist":
-                await Riot.HandleWatchList(interaction as ChatInputCommandInteraction);
-                break;
-            case "history":
-                await Riot.HandleHistory(interaction as ChatInputCommandInteraction);
-                break;
 
             // Sound
             case "play":
@@ -116,15 +95,6 @@ client.on("interactionCreate", async (interaction) => {
             case "setresponse":
                 await Misc.AddMessage(interaction as ChatInputCommandInteraction);
                 break;
-            case "banclock":
-                await Misc.ShowRestriction(interaction as ChatInputCommandInteraction);
-                break;
-            case "settimer":
-                await Misc.SetRestriction(interaction as ChatInputCommandInteraction);
-                break;
-            case "poke":
-                await Misc.Poke(interaction);
-                break;
             case "balance":
                 await Misc.Balance(interaction);
                 break;
@@ -132,19 +102,9 @@ client.on("interactionCreate", async (interaction) => {
                 await Misc.Top10(interaction);
                 break;
 
-            // OnlineFix
-            case "randomgame":
-                await OnlineFix.Handle(interaction);
-                break;
-
             // MiniGames
             case "mines":
                 await Mines.Handle(interaction as ChatInputCommandInteraction);
-                break;
-
-            // Movies
-            case "movies":
-                await Movies.Handle(interaction as ChatInputCommandInteraction);
                 break;
         }
     } catch (err: any) {
