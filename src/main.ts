@@ -6,6 +6,7 @@ import * as Embed from "~/utils/embed";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Sound from "~/controllers/sound";
+import * as Movies from "~/controllers/movies";
 import User from "~/models/user";
 import "~/register-commands";
 
@@ -100,6 +101,11 @@ client.on("interactionCreate", async (interaction) => {
                 break;
             case "top10":
                 await Misc.Top10(interaction);
+                break;
+
+            // OnlineFix
+            case "randomgame":
+                await OnlineFix.Handle(interaction);
                 break;
 
             // MiniGames
