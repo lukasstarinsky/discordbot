@@ -38,9 +38,23 @@ const commands = [
             },
             {
                 name: "region",
-                description: "Account region (eun1, euw1, na1), default: eun1",
+                description: "Account region, default: EUNE",
                 type: ApplicationCommandOptionType.String,
-                required: false
+                required: false,
+                choices: [
+                    {
+                        name: "EUNE",
+                        value: "eun1"
+                    },
+                    {
+                        name: "EUW",
+                        value: "euw1"
+                    },
+                    {
+                        name: "NA",
+                        value: "na1"
+                    }
+                ]
             }
         ]
     },
@@ -56,9 +70,23 @@ const commands = [
             },
             {
                 name: "region",
-                description: "Account region (eun1, euw1, na1), default: eun1",
+                description: "Account region, default: EUNE",
                 type: ApplicationCommandOptionType.String,
-                required: false
+                required: false,
+                choices: [
+                    {
+                        name: "EUNE",
+                        value: "eun1"
+                    },
+                    {
+                        name: "EUW",
+                        value: "euw1"
+                    },
+                    {
+                        name: "NA",
+                        value: "na1"
+                    }
+                ]
             }
         ]
     },
@@ -134,9 +162,23 @@ const commands = [
             },
             {
                 name: "region",
-                description: "Account region (eun1, euw1, na1), default: eun1",
+                description: "Account region, default: EUNE",
                 type: ApplicationCommandOptionType.String,
-                required: false
+                required: false,
+                choices: [
+                    {
+                        name: "EUNE",
+                        value: "eun1"
+                    },
+                    {
+                        name: "EUW",
+                        value: "euw1"
+                    },
+                    {
+                        name: "NA",
+                        value: "na1"
+                    }
+                ]
             }
         ]
     },
