@@ -161,7 +161,7 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
 
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "40px Georgia";
+    context.font = "bold 40px Rubik";
     context.fillStyle = "#FFFFFF";
     context.fillText(`${minutes}:${seconds}`, canvas.width / 2, canvas.height / 2);
 
@@ -193,12 +193,18 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.fillStyle = "#FFFFFF";
-        context.font = "bold 25px Georgia";
+        context.font = "bold 30px Rubik";
         context.fillText(`${champion![0]}`, rect.centerX + index * rect.spacing, rect.centerY);
-        context.font = "20px Georgia";
-        context.fillText(summoner.gameName, rect.centerX + index * rect.spacing, rect.centerY + 35);
-        context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 70);
-        context.fillText(`${soloLeagueEntry.leaguePoints} LP`, rect.centerX + index * rect.spacing, rect.centerY + 95);
+        context.font = "25px Rubik";
+        context.fillText(summoner.gameName, rect.centerX + index * rect.spacing, rect.centerY + 40);
+
+        // Rank info
+        const rankIcon = await Canvas.loadImage(`./assets/ranks/${soloLeagueEntry.tier.toLowerCase()}.png`);
+        context.drawImage(rankIcon, rect.centerX - 50 + index * rect.spacing, rect.centerY + 50, 100, 100);
+
+        context.fillText(`${soloLeagueEntry.tier} ${soloLeagueEntry.rank}`, rect.centerX + index * rect.spacing, rect.centerY + 160);
+        context.font = "20px Rubik";
+        context.fillText(`${soloLeagueEntry.leaguePoints} LP`, rect.centerX + index * rect.spacing, rect.centerY + 185);
         
         ++count;
     }
@@ -206,7 +212,7 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     // Bans
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "40px Georgia";
+    context.font = "40px Rubik";
     context.fillStyle = "#FFFFFF";
     context.fillText("Bans", 118, canvas.height / 2 - 300);
     count = 0;

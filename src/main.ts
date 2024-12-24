@@ -7,6 +7,8 @@ import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
 import * as Sound from "~/controllers/sound";
 import User from "~/models/user";
+import { GlobalFonts } from "@napi-rs/canvas";
+import { join } from "path";
 import "~/register-commands";
 
 const client: Client = new Client({
@@ -20,6 +22,8 @@ const client: Client = new Client({
 });
 
 client.once("ready", async () => {
+    GlobalFonts.registerFromPath(join(__dirname, '..', "assets", 'fonts', 'rubik.ttf'), "Rubik");
+
     console.log("Logging in...");
     
     try {
