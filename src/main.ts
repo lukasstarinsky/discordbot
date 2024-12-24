@@ -45,16 +45,11 @@ client.on("ready", async () => {
                 if (member.user.bot) return;
 
                 const userId = member.user.id;
-                const user = await User.findOne({ id: userId });
-
-                if (!user) {
-                    const newUserData = new User({ id: userId });
-                    await newUserData.save();
-                }
+                await User.findOne({ id: userId }, {}, { upsert: true });
             });
         });
     } catch (err: any) {
-        console.error("Failed to create initial data");
+        console.error("Failed to create initial user data");
         console.error(err);
     }
 });

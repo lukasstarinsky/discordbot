@@ -1,10 +1,8 @@
 import { CommandInteraction, ChatInputCommandInteraction, Message } from "discord.js";
 import Insults from "~/data/insults";
 import User from "~/models/user";
-import MessageContainEntity, { MessageDocument } from "~/models/message";
+import MessageContainEntity from "~/models/message";
 import * as Embed from "~/utils/embed";
-
-let messageContains: Array<MessageDocument> = [];
 
 export async function Insult(interaction: ChatInputCommandInteraction) {
     const user = interaction.options.getUser("user");
@@ -16,10 +14,11 @@ export async function CheckMessage(message: Message) {
         return;
 
     const messageLower = message.content.toLowerCase();
+    const messages = await MessageContainEntity.find({ guildId: message.guildId });
 
-    messageContains.forEach(record => {
+    messages.forEach(async (record) => {
         if (messageLower.includes(record.message) && record.response.length > 1) {
-            message.reply(record.response);
+            await message.reply(record.response);
         }
     });
 }
@@ -28,15 +27,8 @@ export async function AddMessage(interaction: ChatInputCommandInteraction) {
     const message = interaction.options.getString("message")!.toLowerCase();
     const response = interaction.options.getString("response");
 
-    await MessageContainEntity.findOneAndUpdate({ message: message }, { response: response }, { upsert: true, new: true, setDefaultsOnInsert: true });
-
+    await MessageContainEntity.findOneAndUpdate({ message: message }, { response, guildId: interaction.guildId }, { upsert: true });
     await interaction.editReply({ embeds: [Embed.CreateInfoEmbed(`Response set !`)] });
-
-    await UpdateMessage();
-}
-
-export async function UpdateMessage() {
-    messageContains = await MessageContainEntity.find({});
 }
 
 export async function Balance(interaction: CommandInteraction) {
