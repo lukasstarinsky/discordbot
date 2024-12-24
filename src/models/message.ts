@@ -10,7 +10,11 @@ const messageSchema = new Schema({
         unique: true,
         type: String,
         required: true
-    }, 
+    },
+    guildId: {
+        type: String,
+        required: true
+    },
     response: {
         type: String,
         required: true

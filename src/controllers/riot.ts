@@ -9,27 +9,7 @@ import * as Embed from "~/utils/embed";
 import { Urls } from "~/data/constants";
 import "~/utils/string";
 
-let liveGameBackground: Canvas.Image;
 let champions: Champions;
-const playerRect = {
-    x: 240, 
-    y: 6, 
-    w: 249,
-    h: 456,
-    spacing: 296,
-    centerX: 240 + (249 / 2),
-    centerY: 6 + (456 / 2)
-};
-
-const playerRect2 = {
-    x: 240, 
-    y: 529, 
-    w: 249,
-    h: 456,
-    spacing: 296,
-    centerX: 240 + (249 / 2),
-    centerY: 529 + (456 / 2)
-};
 
 export async function Initialize() {
     console.log("Fetching lol champion images...");
@@ -44,8 +24,6 @@ export async function Initialize() {
         const iconResponse = await axios.get(Urls.DDRAGON_CHAMPION_ICON + value.image.full, { responseType: "stream" });
         iconResponse.data.pipe(fs.createWriteStream(`./assets/champions/${value.image.full}`));
     });
-
-    liveGameBackground = await Canvas.loadImage("./assets/loading_screen.png");
 }
 
 export async function HandleLoseStreak(interaction: ChatInputCommandInteraction) {
@@ -136,11 +114,26 @@ export async function HandleSummonerData(interaction: ChatInputCommandInteractio
 }
 
 export async function HandleInGameData(interaction: ChatInputCommandInteraction) {
+    const playerRect = {
+        x: 240,
+        y: 6,
+        w: 249,
+        h: 456,
+        spacing: 296,
+        centerX: 364,
+        centerY: 234
+    };
+    const playerRect2 = {
+        ...playerRect,
+        y: 529,
+        centerY: 757
+    };
     const canvas = Canvas.createCanvas(1920, 989);
     const context = canvas.getContext("2d");
 
     // Background
-    context.drawImage(liveGameBackground, 0, 0, canvas.width, canvas.height);
+    const canvasBackground = await Canvas.loadImage("./assets/loading_screen.png");
+    context.drawImage(canvasBackground, 0, 0, canvas.width, canvas.height);
 
     const accountNameTag = interaction.options.getString("account")!.split("#");
     const region = interaction.options.getString("region") || "eun1";
@@ -218,6 +211,8 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     context.fillText("Bans", 118, canvas.height / 2 - 300);
     count = 0;
     for (let banned of gameInfo.bannedChampions) {
+        if (banned.championId === -1)
+            continue;
         const champion = Object.entries(champions.data).find(([key, value]) => value.key === String(banned.championId));
         const championIcon = await Canvas.loadImage(`./assets/champions/${champion![1].image.full}`);
         context.drawImage(championIcon, 118 - 25, canvas.height / 2 + count * 60 - 270, 50, 50);
