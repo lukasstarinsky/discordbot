@@ -45,6 +45,22 @@ export async function GetLoseStreak(account: AccountDto): Promise<number> {
     return loseStreak;
 }
 
+export async function GetLast5MatchHistory(account: AccountDto): Promise<MatchDto[]> {
+    const matchIds = await GetMatchHistory(account);
+
+    let matches: MatchDto[] = [];
+
+    for (let matchId of matchIds) {
+        const match = await GetMatch(matchId);
+        matches.push(match);
+
+        if (matches.length === 5)
+            break;
+    }
+
+    return matches;
+}
+
 export async function GetSummonerByPUUID(puuid: string, region: string = "eun1"): Promise<Summoner> {
     const summonerUrl = `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`;
     const summoner = await axios.get<Summoner>(summonerUrl, { headers: { "X-Riot-Token": process.env.RIOT_API }});

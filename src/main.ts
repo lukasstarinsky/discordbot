@@ -75,6 +75,9 @@ client.on("interactionCreate", async (interaction) => {
             case "ingame":
                 await Riot.HandleInGameData(interaction as ChatInputCommandInteraction);
                 break;
+            case "matchhistory":
+                await Riot.HandleMatchHistory(interaction as ChatInputCommandInteraction);
+                break;
 
             // Sound
             case "play":

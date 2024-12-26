@@ -2,12 +2,13 @@ import { ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from "di
 import fs from "fs";
 import axios from "axios";
 import Canvas from "@napi-rs/canvas";
-import { LeagueEntryDTO } from "~/types/riot";
+import { LeagueEntryDTO, MatchDto } from "~/types/riot";
 import { Champions } from "~/types/riot/ddragon";
 import * as Service from "~/services/riot";
 import * as Embed from "~/utils/embed";
 import { Urls } from "~/data/constants";
 import "~/utils/string";
+import { AccountDto } from "~/types/riot/account.type";
 
 let champions: Champions;
 
@@ -45,6 +46,77 @@ export async function HandleLoseStreak(interaction: ChatInputCommandInteraction)
         .setTitle(`**${name}** Lose Streak`)
         .setThumbnail(loseStreak > 0 ? Urls.CLASSIC_DUCK : null)
         .setFields({ name: "Lose Streak", value: `${loseStreak} ${loseStreak > 1 ? "games": "game"}`, inline: true });
+
+    await interaction.editReply({ embeds: [embed] });
+}
+
+export async function HandleMatchHistory(interaction: ChatInputCommandInteraction) {
+    const accountNameTag = interaction.options.getString("account")!.split("#");
+    const region = interaction.options.getString("region") || "eun1";
+    const name = accountNameTag[0];
+    const tag = accountNameTag[1];
+    
+    let account: AccountDto;
+    try {
+        account = await Service.GetAccount(name, tag);
+    } catch (err: any) {
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
+        return;
+    }
+
+    const matches: MatchDto[] = await Service.GetLast5MatchHistory(account);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`**${name}** - Last 5 games match History`);
+
+    if (matches.length === 0) {
+        embed.setDescription("No matches found.");
+        await interaction.editReply({ embeds: [embed] });
+        return;
+    }
+
+    for (let match of matches) {
+        const participant = match.info.participants.find(participant => participant.riotIdGameName === account.gameName)!;
+
+        const won: boolean = participant!.win;
+
+        const date = new Date(match.info.gameEndTimestamp).toLocaleString("en-UK", {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h24',
+            timeZone: 'Europe/Bratislava'
+        });
+        const seconds = String(match.info.gameDuration % 60).padStart(2, "0");
+        const minutes = Math.floor(match.info.gameDuration / 60);
+
+        const score: string = `${participant.kills}/${participant.deaths}/${participant.assists}`;
+        const role: string = `${participant.championName} - ${participant.lane}`;
+
+        embed.addFields({
+            name: "**----------------**",
+            value: `**Game ${matches.indexOf(match) + 1}** - ${won ? "✅": "❌"}`
+        });
+
+        embed.addFields({
+            name: `**Score**`,
+            value: `${score}`,
+            inline: true
+        });
+
+        embed.addFields({
+            name: `**Role**`,
+            value: `${role}`,
+            inline: true
+        });
+
+        embed.addFields({
+            name: `**${match.info.queueId == 420 ? "SoloQ": "FlexQ"}** - ${minutes}:${seconds} minutes`,
+            value: `${date}`
+        });
+    };
 
     await interaction.editReply({ embeds: [embed] });
 }
