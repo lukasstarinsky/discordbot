@@ -29,21 +29,21 @@ export async function Initialize() {
 
 export async function HandleLoseStreak(interaction: ChatInputCommandInteraction) {
     const accountNameTag = interaction.options.getString("account")!.split("#");
-    const region = interaction.options.getString("region") || "eun1";
+    const region = interaction.options.getString("region")!;
     const name = accountNameTag[0];
     const tag = accountNameTag[1];
     
     let account;
     try {
-        account = await Service.GetAccount(name, tag);
+        account = await Service.GetAccount(name, tag, region);
     } catch (err: any) {
         await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
         return;
     }
-    const loseStreak = await Service.GetLoseStreak(account);
+    const loseStreak = await Service.GetLoseStreak(account, region);
 
     const embed = new EmbedBuilder()
-        .setTitle(`**${name}** Lose Streak`)
+        .setTitle(`**${name}#${tag}** Lose Streak`)
         .setThumbnail(loseStreak > 0 ? Urls.CLASSIC_DUCK : null)
         .setFields({ name: "Lose Streak", value: `${loseStreak} ${loseStreak > 1 ? "games": "game"}`, inline: true });
 
@@ -52,22 +52,22 @@ export async function HandleLoseStreak(interaction: ChatInputCommandInteraction)
 
 export async function HandleMatchHistory(interaction: ChatInputCommandInteraction) {
     const accountNameTag = interaction.options.getString("account")!.split("#");
-    const region = interaction.options.getString("region") || "eun1";
+    const region = interaction.options.getString("region")!;
     const name = accountNameTag[0];
     const tag = accountNameTag[1];
     
     let account: AccountDto;
     try {
-        account = await Service.GetAccount(name, tag);
+        account = await Service.GetAccount(name, tag, region);
     } catch (err: any) {
         await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
         return;
     }
 
-    const matches: MatchDto[] = await Service.GetLast5MatchHistory(account);
+    const matches: MatchDto[] = await Service.GetLast5MatchHistory(account, region);
 
     const embed = new EmbedBuilder()
-        .setTitle(`**${name}** - Last 5 games match History`);
+        .setTitle(`**${name}#${tag}** - Last 5 games match History`);
 
     if (matches.length === 0) {
         embed.setDescription("No matches found.");
@@ -123,19 +123,19 @@ export async function HandleMatchHistory(interaction: ChatInputCommandInteractio
 
 export async function HandleSummonerData(interaction: ChatInputCommandInteraction) {
     const accountNameTag = interaction.options.getString("account")!.split("#");
-    const region = interaction.options.getString("region") || "eun1";
+    const region = interaction.options.getString("region")!;
     const name = accountNameTag[0];
     const tag = accountNameTag[1];
 
     let account;
     try {
-        account = await Service.GetAccount(name, tag);
+        account = await Service.GetAccount(name, tag, region);
     } catch (err) {
-        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#** doesn't exist.`)] });
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
         return;
     }
     const soloLeagueEntry = await Service.GetSoloLeagueEntry(account, region);
-    const lastGame = await Service.GetLastMatch(account);
+    const lastGame = await Service.GetLastMatch(account, region);
     const summonerLastGameStats = Service.GetSummonerStatsFromMatch(lastGame, account);
 
     const challenges = summonerLastGameStats.challenges;
@@ -208,14 +208,14 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     context.drawImage(canvasBackground, 0, 0, canvas.width, canvas.height);
 
     const accountNameTag = interaction.options.getString("account")!.split("#");
-    const region = interaction.options.getString("region") || "eun1";
+    const region = interaction.options.getString("region")!;
     const name = accountNameTag[0];
     const tag = accountNameTag[1];
 
     let gameInfo;
     let account;
     try {
-        account = await Service.GetAccount(name, tag);
+        account = await Service.GetAccount(name, tag, region);
         gameInfo = await Service.GetCurrentActiveMatch(account, region);
     } catch(err: any) {
         if (err.response && err.response.status == 404) {
@@ -241,7 +241,7 @@ export async function HandleInGameData(interaction: ChatInputCommandInteraction)
     let count = 0;
     for (let participant of gameInfo.participants) {
         const champion = Object.entries(champions.data).find(([key, value]) => value.key === String(participant.championId) );
-        const summoner = await Service.GetAccountByPUUID(participant.puuid);
+        const summoner = await Service.GetAccountByPUUID(participant.puuid, region);
         let soloLeagueEntry = await Service.GetSoloLeagueEntry(summoner, region);
 
         if (!soloLeagueEntry) {

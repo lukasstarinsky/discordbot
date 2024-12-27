@@ -44,7 +44,8 @@ const commands = [
                 choices: [
                     {
                         name: "EUNE",
-                        value: "eun1"
+                        value: "eun1",
+                        default: true
                     },
                     {
                         name: "EUW",
@@ -76,7 +77,8 @@ const commands = [
                 choices: [
                     {
                         name: "EUNE",
-                        value: "eun1"
+                        value: "eun1",
+                        default: true
                     },
                     {
                         name: "EUW",
@@ -108,7 +110,8 @@ const commands = [
                 choices: [
                     {
                         name: "EUNE",
-                        value: "eun1"
+                        value: "eun1",
+                        default: true
                     },
                     {
                         name: "EUW",
@@ -200,7 +203,8 @@ const commands = [
                 choices: [
                     {
                         name: "EUNE",
-                        value: "eun1"
+                        value: "eun1",
+                        default: true
                     },
                     {
                         name: "EUW",

@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, ChatInputCommandInteraction } from "discord.js";
 import mongoose from "mongoose";
+import axios from "axios";
 import "dotenv/config";
 import { Mines } from "~/controllers/minigames";
 import * as Embed from "~/utils/embed";
@@ -23,6 +24,13 @@ const client: Client = new Client({
 
 client.once("ready", async () => {
     GlobalFonts.registerFromPath(join(__dirname, '..', "assets", 'fonts', 'rubik.ttf'), "Rubik");
+
+    axios.interceptors.request.use((config) => {
+        if (config.url?.includes("riotgames")) {
+            config.headers["X-Riot-Token"] = process.env.RIOT_API;
+        }
+        return config;
+    })
 
     console.log("Logging in...");
     
