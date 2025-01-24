@@ -125,7 +125,7 @@ export async function GetMatch(matchId: string, regionStr: string): Promise<Matc
 
 export async function GetMatchHistory(account: AccountDto, regionStr: string, queueType: QueueID = QueueID.SoloQ): Promise<string[]> {
     const region = GetRegion(regionStr);
-    const matchIdsUrl = `https://${region.full}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?count=30&queue=${queueType}`;
+    const matchIdsUrl = `https://${region.full}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?count=30`;
     const matchIds = await axios.get<string[]>(matchIdsUrl);
 
     return matchIds.data;
