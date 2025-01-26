@@ -44,7 +44,6 @@ export async function HandleLoseStreak(interaction: ChatInputCommandInteraction)
 
     const embed = new EmbedBuilder()
         .setTitle(`**${name}#${tag}** Lose Streak`)
-        .setThumbnail(loseStreak > 0 ? Urls.CLASSIC_DUCK : null)
         .setFields({ name: "Lose Streak", value: `${loseStreak} ${loseStreak > 1 ? "games": "game"}`, inline: true });
 
     await interaction.editReply({ embeds: [embed] });

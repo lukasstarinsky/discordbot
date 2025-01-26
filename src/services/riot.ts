@@ -1,17 +1,11 @@
 import axios from "axios";
 import "dotenv/config";
 
-import { 
-    Summoner,
-    LeagueEntryDTO,
-    MatchDto,
-    ParticipantDto,
-    CurrentGameInfoDTO
-} from "~/types/riot";
+import { Summoner, LeagueEntryDTO, MatchDto, ParticipantDto, CurrentGameInfoDTO } from "~/types/riot";
 import { AccountDto } from "~/types/riot/account.type";
 import { QueueID } from "~/types/riot/match.type";
 
-function GetRegion(region: string) {
+const GetRegion = (region: string) => {
     if (region === "na1")
         return { full: "americas", shortcut: "na1" };
     else if (region === "eun1")

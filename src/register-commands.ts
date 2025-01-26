@@ -19,12 +19,12 @@ const commands = [
         description: "Show your balance"
     },
     {
-        name: "hitpoint",
-        description: "Shows HitPoint stats"
-    },
-    {
         name: "top10",
         description: "Shows the TOP 10 users"
+    },
+    {
+        name: "yearprogress",
+        description: "Show the percentage of year progress"
     },
     {
         name: "lol",
@@ -217,27 +217,7 @@ const commands = [
                 ]
             }
         ]
-    },
-    {
-        name: "play",
-        description: "Plays a sound",
-        options: [
-            {
-                name: "url",
-                description: "URL of the sound",
-                type: ApplicationCommandOptionType.String,
-                required: true,
-            }
-        ]
-    },
-    {
-        name: "stop",
-        description: "Stops a sound",
-    },
-    {
-        name: "queue",
-        description: "Lists the queue",
-    },
+    }
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN!);

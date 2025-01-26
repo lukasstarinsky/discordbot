@@ -6,7 +6,6 @@ import { Mines } from "~/controllers/minigames";
 import * as Embed from "~/utils/embed";
 import * as Riot from "~/controllers/riot";
 import * as Misc from "~/controllers/misc";
-import * as Sound from "~/controllers/sound";
 import User from "~/models/user";
 import { GlobalFonts } from "@napi-rs/canvas";
 import { join } from "path";
@@ -87,17 +86,6 @@ client.on("interactionCreate", async (interaction) => {
                 await Riot.HandleMatchHistory(interaction as ChatInputCommandInteraction);
                 break;
 
-            // Sound
-            case "play":
-                await Sound.Play(interaction as ChatInputCommandInteraction);
-                break;
-            case "queue":
-                await Sound.ListQueue(interaction as ChatInputCommandInteraction);
-                break;
-            case "stop":
-                await Sound.Stop(interaction as ChatInputCommandInteraction);
-                break;
-
             // Misc
             case "insult":
                 await Misc.Insult(interaction as ChatInputCommandInteraction);
@@ -110,6 +98,9 @@ client.on("interactionCreate", async (interaction) => {
                 break;
             case "top10":
                 await Misc.Top10(interaction);
+                break;
+            case "yearprogress":
+                await Misc.YearProgress(interaction);
                 break;
 
             // MiniGames
