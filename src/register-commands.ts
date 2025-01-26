@@ -27,6 +27,10 @@ const commands = [
         description: "Shows the TOP 10 users"
     },
     {
+        name: "yearprogress",
+        description: "Show the percentage of year progress"
+    },
+    {
         name: "lol",
         description: "Show data of selected summoner",
         options: [

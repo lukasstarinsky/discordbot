@@ -111,6 +111,9 @@ client.on("interactionCreate", async (interaction) => {
             case "top10":
                 await Misc.Top10(interaction);
                 break;
+            case "yearprogress":
+                await Misc.YearProgress(interaction);
+                break;
 
             // MiniGames
             case "mines":

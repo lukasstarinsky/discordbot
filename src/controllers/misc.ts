@@ -48,3 +48,11 @@ export async function Top10(interaction: CommandInteraction) {
 
     await interaction.editReply({ embeds: [Embed.CreateEmbed("TOP 10 User Balance", 0x00FFFF, text)] });
 }
+
+export async function YearProgress(interaction: CommandInteraction) {
+    const now = new Date();
+    const newYear = new Date(now.getFullYear(), 0, 1);
+    const daysSinceNewYear = Math.ceil((now.getTime() - newYear.getTime() + 1) / 86400000);
+
+    await interaction.editReply({ embeds: [Embed.CreateEmbed("Year Progress", 0x00FFFF, ((daysSinceNewYear / 365) * 100).toFixed(2) + '%')] });
+}
