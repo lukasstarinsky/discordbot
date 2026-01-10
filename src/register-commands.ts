@@ -138,24 +138,6 @@ const commands = [
         ]
     },
     {
-        name: "settimer",
-        description: "Sets user's ban time.",
-        options: [
-            {
-                name: "user",
-                description: "User",
-                type: ApplicationCommandOptionType.User,
-                required: true
-            },
-            {
-                name: "until",
-                description: "Ban Length in days",
-                type: ApplicationCommandOptionType.Number,
-                required: true
-            }
-        ]
-    },
-    {
         name: "setresponse",
         description: "Sets automatic response to message.",
         options: [
@@ -169,18 +151,6 @@ const commands = [
                 name: "response",
                 description: "Message response",
                 type: ApplicationCommandOptionType.String,
-                required: true
-            }
-        ]
-    },
-    {
-        name: "banclock",
-        description: "Gets user's ban time.",
-        options: [
-            {
-                name: "user",
-                description: "Select user",
-                type: ApplicationCommandOptionType.User,
                 required: true
             }
         ]
