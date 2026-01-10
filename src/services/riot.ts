@@ -76,8 +76,7 @@ export async function GetSummonerByPUUID(puuid: string, regionStr: string): Prom
 
 export async function GetLeagueEntries(account: AccountDto, regionStr: string): Promise<LeagueEntryDTO[]> {
     const region = GetRegion(regionStr);
-    const summoner = await GetSummonerByPUUID(account.puuid, region.shortcut);
-    const leagueEntriesUrl = `https://${region.shortcut}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`;
+    const leagueEntriesUrl = `https://${region.shortcut}.api.riotgames.com/lol/league/v4/entries/by-puuid/${account.puuid}`;
     const leagueEntries = await axios.get<LeagueEntryDTO[]>(leagueEntriesUrl);
 
     return leagueEntries.data;
