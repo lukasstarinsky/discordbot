@@ -59,7 +59,7 @@ export async function GetWinStreak(account: AccountDto, regionStr: string): Prom
 
         for (let participant of match.info.participants) {
             if (participant.riotIdGameName === account.gameName) {
-                if (participant.win)
+                if (!participant.win)
                     return winStreak;
                 
                 winStreak++;
