@@ -93,6 +93,39 @@ const commands = [
         ]
     },
     {
+        name: "winstreak",
+        description: "Show winstreak of selected summoner",
+        options: [
+            {
+                name: "account",
+                description: "Account name (including tag)",
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: "region",
+                description: "Account region, default: EUNE",
+                type: ApplicationCommandOptionType.String,
+                required: false,
+                choices: [
+                    {
+                        name: "EUNE",
+                        value: "eun1",
+                        default: true
+                    },
+                    {
+                        name: "EUW",
+                        value: "euw1"
+                    },
+                    {
+                        name: "NA",
+                        value: "na1"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         name: "matchhistory",
         description: "Show match history of selected summoner",
         options: [

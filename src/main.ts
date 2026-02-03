@@ -76,6 +76,9 @@ client.on("interactionCreate", async (interaction) => {
             case "losestreak":
                 await Riot.HandleLoseStreak(interaction as ChatInputCommandInteraction);
                 break;
+            case "winstreak":
+                await Riot.HandleWinStreak(interaction as ChatInputCommandInteraction);
+                break;
             case "lol":
                 await Riot.HandleSummonerData(interaction as ChatInputCommandInteraction);
                 break;

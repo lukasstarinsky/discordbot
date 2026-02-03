@@ -49,6 +49,27 @@ export async function HandleLoseStreak(interaction: ChatInputCommandInteraction)
     await interaction.editReply({ embeds: [embed] });
 }
 
+export async function HandleWinStreak(interaction: ChatInputCommandInteraction) {
+    const accountNameTag = interaction.options.getString("account")!.split("#");
+    const region = interaction.options.getString("region")!;
+    const name = accountNameTag[0];
+    const tag = accountNameTag[1];
+    
+    let account;
+    try {
+        account = await Service.GetAccount(name, tag, region);
+    } catch (err: any) {
+        await interaction.editReply({ embeds: [Embed.CreateErrorEmbed(`Account **${name}#${tag}** doesn't exist.`)] });
+        return;
+    }
+    const winStreak = await Service.GetWinStreak(account, region);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`**${name}#${tag}** Win Streak`)
+        .setFields({ name: "Win Streak", value: `${winStreak} ${winStreak > 1 ? "games": "game"}`, inline: true });
+    await interaction.editReply({ embeds: [embed] });
+}
+
 export async function HandleMatchHistory(interaction: ChatInputCommandInteraction) {
     const accountNameTag = interaction.options.getString("account")!.split("#");
     const region = interaction.options.getString("region")!;

@@ -50,6 +50,26 @@ export async function GetLoseStreak(account: AccountDto, regionStr: string): Pro
     return loseStreak;
 }
 
+export async function GetWinStreak(account: AccountDto, regionStr: string): Promise<number> {
+    const matchIds = await GetMatchHistory(account, regionStr);
+
+    let winStreak = 0;
+    for (let matchId of matchIds) {
+        const match = await GetMatch(matchId, regionStr);
+
+        for (let participant of match.info.participants) {
+            if (participant.riotIdGameName === account.gameName) {
+                if (participant.win)
+                    return winStreak;
+                
+                winStreak++;
+            }
+        }
+    }
+
+    return winStreak;
+}
+
 export async function GetLast5MatchHistory(account: AccountDto, regionStr: string): Promise<MatchDto[]> {
     const matchIds = await GetMatchHistory(account, regionStr);
 
